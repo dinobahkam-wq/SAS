@@ -8,6 +8,8 @@ export default function EventWorkflow({db,eventId,role}:Props){
  const [note,setNote]=useState('');
  const [checks,setChecks]=useState<string[]|null>(null);
  const [ready,setReady]=useState(false);
+ const [reviewProblems,setReviewProblems]=useState<string[]|null>(null);
+ const [reviewReady,setReviewReady]=useState(false);
  const [busy,setBusy]=useState(false);
  const [notice,setNotice]=useState('');
  useEffect(()=>{let live=true;db.rpc('sas_admin_event_editor',{p_id:eventId}).then(({data,error})=>{
@@ -17,6 +19,7 @@ export default function EventWorkflow({db,eventId,role}:Props){
  setStart(data?.starts_at?new Date(data.starts_at).toISOString().slice(0,16):'');
  setNote(data?.review_note??'');
  });return()=>{live=false}},[db,eventId]);
+ async function reviewRequirements(){setBusy(true);setNotice('');const {data,error}=await db.rpc('sas_event_review_requirements',{p_id:eventId});setBusy(false);if(error){setNotice('تعذر فحص المتطلبات: '+error.message);return}setReviewProblems(data?.problems??[]);setReviewReady(data?.ready===true)}
  async function saveDate(){if(!start)return;setBusy(true);const {error}=await db.rpc('sas_admin_set_event_date',{p_id:eventId,p_starts_at:new Date(start).toISOString()});setBusy(false);setNotice(error?error.message:'حُفظ تاريخ الحدث.')}
  async function act(action:string){if(action==='publish'&&!window.confirm('هل تؤكد إتاحة هذا الحدث للجمهور؟'))return;setBusy(true);setNotice('');const {data,error}=await db.rpc('sas_event_workflow',{p_id:eventId,p_action:action,p_note:note.trim()});setBusy(false);if(error){setNotice(error.message);return}
  if(action==='check'){setChecks(data?.problems??[]);setReady(data?.ready===true);return}
@@ -27,7 +30,7 @@ export default function EventWorkflow({db,eventId,role}:Props){
  else setNotice('حُفظ القرار التحريري.');}
  return <section className="event-workflow admin-panel"><h2>مراجعة الحدث ونشره</h2><p>الحالة: {stage==='draft'?'مسودة':stage==='review'?'بانتظار المراجعة':'معتمد تحريرياً'}</p>{stage!=='draft'&&<p className="admin-feedback">محتوى الحدث وعلاقاته مقفلة خلال المراجعة وبعد الاعتماد. عند إعادته إلى المسودة يمكن استئناف التحرير.</p>}
  {stage==='draft'&&<><label>تاريخ بدء الحدث<input type="datetime-local" value={start} onChange={e=>setStart(e.target.value)}/></label><button disabled={busy||!start} type="button" onClick={()=>void saveDate()}>حفظ التاريخ</button>{['admin','editor'].includes(role)&&<button disabled={busy} type="button" onClick={()=>void act('submit')}>تقديم الحدث للمراجعة</button>}</>}
- {stage==='review'&&['reviewer','admin'].includes(role)&&<><label>ملاحظات المراجع<textarea rows={2} value={note} onChange={e=>setNote(e.target.value)}/></label><button disabled={busy} type="button" onClick={()=>void act('approve')}>اعتماد الحدث تحريرياً</button><button disabled={busy||note.trim().length<5} type="button" onClick={()=>void act('return')}>إعادة الحدث للتعديل</button></>}
+ {stage==='review'&&['reviewer','admin'].includes(role)&&<><button type="button" disabled={busy} onClick={()=>void reviewRequirements()}>فحص متطلبات الاعتماد</button>{reviewProblems&&<div className="review-requirements"><strong>{reviewReady?'المتطلبات البنيوية مكتملة':'نواقص يجب معالجتها قبل الاعتماد'}</strong>{reviewProblems.map((problem,i)=><p key={i}>{problem}</p>)}</div>}<label>ملاحظات المراجع<textarea rows={2} value={note} onChange={e=>setNote(e.target.value)}/></label><button disabled={busy||!reviewReady} type="button" onClick={()=>void act('approve')}>اعتماد الحدث تحريرياً</button><button disabled={busy||note.trim().length<5} type="button" onClick={()=>void act('return')}>إعادة الحدث للتعديل</button></>}
  {stage==='approved'&&role==='admin'&&<><button disabled={busy} type="button" onClick={()=>void act('check')}>فحص جاهزية نشر الحدث</button>{checks&&<div>{checks.map((p,i)=><p key={i}>{p}</p>)}{ready&&<button disabled={busy} type="button" onClick={()=>void act('publish')}>اعتماد قرار نشر الحدث</button>}</div>}</>}
  {notice&&<p role="status" className="admin-feedback">{notice}</p>}</section>
 }
