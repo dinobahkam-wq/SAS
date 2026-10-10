@@ -124,3 +124,6 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .development-editor{padding:20px;border:1px solid #e4e9ec;border-radius:13px;background:#f9fbfc;margin:20px 0;display:grid;gap:18px}.development-editor form{padding-bottom:18px;border-bottom:1px solid #e6ebee}.development-editor h3{font-size:18px;margin:0}.development-editor>button{justify-self:start}
 
 .review-actions{padding:14px;border:1px solid #eee2e6;border-radius:10px;display:grid;gap:9px;background:#fcf8f9;margin-top:12px}.review-actions label{display:grid;gap:6px}.review-actions small{color:#8c6972}
+
+/* Isolate Gregorian ASCII date components from the RTL interface */
+.sas-date{direction:ltr;unicode-bidi:isolate;display:inline-block;font-variant-numeric:tabular-nums;white-space:nowrap}
