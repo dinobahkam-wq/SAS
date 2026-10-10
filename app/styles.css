@@ -111,3 +111,10 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .admin-records>p{padding:25px;text-align:center;color:#8b989f}
 .admin-feedback{padding:12px;border-radius:9px;background:#f7f2f3;color:#814756}
 @media(max-width:850px){.admin-grid{grid-template-columns:1fr}.admin-heading{align-items:start;flex-direction:column}.admin-page{padding:22px 16px 45px}}
+
+/* Knowledge relation editor */
+.admin-links{border:1px solid #e5eaed;border-radius:12px;padding:15px;margin:4px 0;background:#fbfcfd}
+.admin-links legend{padding:0 8px;font-weight:700;font-size:14px}
+.admin-panel .admin-links label{display:flex;align-items:center;gap:10px;font-weight:500;padding:8px 0;cursor:pointer}
+.admin-panel .admin-links input[type=checkbox]{width:18px;height:18px;accent-color:#9a4d60}
+.admin-links p{font-size:13px;color:#819098;line-height:1.8}
