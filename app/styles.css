@@ -73,3 +73,11 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .knowledge-links a:hover{background:#f7eef1}
 .knowledge-features span{border-right:2px solid #d5dce1;padding:4px 12px;color:#71828a;font-size:13px}
 @media(max-width:820px){.knowledge-columns{grid-template-columns:1fr}.knowledge-page{padding:20px 17px 45px}.knowledge-hero{padding:28px 22px}.knowledge-empty{padding-block:44px}}
+
+.directory-results{display:grid;gap:14px;margin-top:20px}
+.directory-entry{padding:22px;border:1px solid #edf0f2;border-radius:14px;background:#fff;transition:border-color .2s ease,transform .2s ease}
+.directory-entry:hover{border-color:#d9e0e4;transform:translateY(-2px)}
+.directory-entry h3{font-family:var(--font-sas-sans),sans-serif;font-weight:700;font-size:20px;margin:13px 0 8px}
+.directory-entry h3 a:hover{color:var(--accent)}
+.directory-entry p{font-size:14px;line-height:1.95;color:#718087;margin:0 0 10px}
+.directory-entry time{font-size:12px;color:#83919b}
