@@ -1,4 +1,4 @@
-/* Fonts are installed locally and intentionally excluded from the public repository. */
+/* Thmanyah type families: Sans for interface and reading, Serif Display for major editorial headings. */
 @font-face{font-family:'Sas Thmanyah Sans';src:url('/fonts/thmanyah-sans-light.otf') format('opentype');font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:'Sas Thmanyah Sans';src:url('/fonts/thmanyah-sans-regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:'Sas Thmanyah Sans';src:url('/fonts/thmanyah-sans-medium.otf') format('opentype');font-weight:500 600;font-style:normal;font-display:swap}
@@ -14,19 +14,9 @@
 /* Identity refinements */
 .brand-fallback{display:none!important}.brand img{max-width:176px;max-height:72px}.main-nav a{position:relative;transition:color .2s ease}.main-nav a::after{content:"";position:absolute;inset-inline-start:0;bottom:-7px;width:0;height:2px;background:#a45b6b;transition:width .22s ease}.main-nav a:hover::after,.main-nav a:focus-visible::after{width:100%}.card,.related-card,.lead-story,.mini-card{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}.card:hover,.related-card:hover,.mini-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(25,40,54,.07)}@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 
-/* SAS typography: single Arabic family for the entire interface */
-html, body { font-family: var(--font-tajarib), Tahoma, sans-serif; }
-body, button, input, textarea, select, option { font-family: var(--font-tajarib), Tahoma, sans-serif; }
-.site-shell, .site-shell * { font-family: inherit; }
-.site-shell strong, .site-shell b { font-weight: 700; }
-.site-shell h1, .site-shell h2, .site-shell h3, .site-shell h4 { font-weight: 700; letter-spacing: normal; }
-.site-shell p, .site-shell small, .site-shell span, .site-shell a { letter-spacing: normal; }
-/* Buttons and fields must inherit despite user-agent font rules */
-.site-shell button, .site-shell input, .site-shell textarea, .site-shell select { font: inherit; }
-
 /* SAS editorial type system: serif for display headings, sans for reading and interface */
 body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,sans-serif}
-.site-shell,.site-shell *{font-family:inherit}
+ .site-shell{font-family:var(--font-sas-sans),Tahoma,sans-serif}
 .site-shell h1,.site-shell h2,.site-shell .section-top h1,.site-shell .lead-content h2,.site-shell .related-title h2,.site-shell .event-head h1{font-family:var(--font-sas-display),var(--font-sas-sans),Tahoma,sans-serif;font-weight:700;letter-spacing:normal}
 .site-shell .side-box-title,.site-shell .related-card h3,.site-shell .category-list,.site-shell .main-nav,.site-shell .tag,.site-shell .eyebrow,.site-shell p,.site-shell small{font-family:var(--font-sas-sans),Tahoma,sans-serif;letter-spacing:normal}
 .site-shell button,.site-shell input,.site-shell textarea,.site-shell select{font-family:var(--font-sas-sans),Tahoma,sans-serif}
