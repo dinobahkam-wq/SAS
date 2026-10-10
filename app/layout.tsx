@@ -1,3 +1,5 @@
 import './styles.css';
-export const metadata={title:'منصة ساس — تجربة محلية',description:'نسخة محلية لا تتضمن محتوى إخباري حقيقي'};
-export default function Layout({children}:{children:React.ReactNode}){return <html lang='ar' dir='rtl'><body><header><strong>منصة ساس <small>SAS</small></strong><nav><a href='/'>الرئيسية</a><a href='/events/sample-event'>الأحداث</a></nav></header>{children}<footer>نسخة تجريبية — لا تمثل المنصة المنشورة</footer></body></html>}
+import Link from 'next/link';
+const logo='https://nrmwshoytmzcmureetjb.supabase.co/storage/v1/object/public/SAS%20LOGO/SAS_LOGO.png';
+export const metadata={title:'منصة ساس | الإعلام والدراسات',description:'منصة ساس: متابعة الأحداث وفهم سياقاتها وملفاتها ومصادرها'};
+export default function Layout({children}:{children:React.ReactNode}){return <html lang="ar" dir="rtl"><body><div className="site-shell"><header className="site-header"><Link className="brand" href="/"><img src={logo} alt="شعار منصة ساس للإعلام والدراسات" /><span className="brand-fallback">SAS</span></Link><nav className="main-nav" aria-label="التنقل الرئيسي"><Link href="/">الرئيسية</Link><Link href="/events/sample-event">الأحداث</Link><a href="/#dossiers">الملفات</a><a href="/#research">الدراسات</a><a href="/#map">الخريطة</a></nav><div className="header-search"><span aria-hidden="true">⌕</span><span>ابحث في ساس</span></div></header>{children}<footer className="footer"><strong>ساس | الإعلام والدراسات</strong><span>المعلومة في سياقها، والمعرفة في متناول الجميع.</span></footer></div></body></html>}
