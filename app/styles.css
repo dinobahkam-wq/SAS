@@ -140,3 +140,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .publication-queue-item>div{background:#f7f8fa;padding:12px;border-radius:9px}
 .publication-queue-item>div p{color:#a04d61;font-size:13px;margin:8px 0}
 .publication-queue-item>button{justify-self:start}
+
+.review-requirements{padding:14px 18px;border:1px solid #e7d9df;background:#fbf7f9;border-radius:12px;margin:14px 0}.review-requirements strong{font-size:14px}.review-requirements p{font-size:13px;color:#8d4359;line-height:1.8;margin:9px 0}
