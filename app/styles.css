@@ -127,3 +127,6 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 
 /* Isolate Gregorian ASCII date components from the RTL interface */
 .sas-date{direction:ltr;unicode-bidi:isolate;display:inline-block;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* Publication readiness and safe LTR links */
+.publication-gate{margin-top:12px;padding:14px;background:#f4f7f8;border:1px solid #dae3e6;border-radius:12px;display:grid;gap:10px}.publication-gate strong{display:block;margin-bottom:8px}.publication-gate p{margin:6px 0;color:#775c63;font-size:13px}.publication-gate button:last-child{background:#203b4b;color:#fff}.sas-source-link{display:inline-block;direction:ltr;unicode-bidi:isolate;text-align:left;word-break:break-all}.admin-panel input[type=url]{direction:ltr;text-align:left;unicode-bidi:isolate}
