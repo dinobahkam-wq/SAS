@@ -1,7 +1,15 @@
 import Link from 'next/link';
 import {notFound} from 'next/navigation';
-import {illustrativeEvents} from '../../../lib/content';
-export default async function Page({params}:{params:Promise<{slug:string}>}){
- const {slug}=await params;const e=illustrativeEvents.find(x=>x.slug===slug);if(!e)notFound();
- return <main className="event-shell"><div className="event-breadcrumb"><Link href="/">الرئيسية</Link><span>←</span><Link href="/events">الأحداث</Link><span>←</span><strong>سجل الحدث</strong></div><div className="event-head"><span className="eyebrow">سجل الحدث</span><h1>{e.title}</h1><p>{e.summary}</p></div><div className="event-panels"><section className="event-panel wide"><span className="tag">خط زمني</span><h2>التطورات المرتبطة</h2><p>هنا ستظهر التطورات المؤرخة والموثقة عندما تُعتمد في قاعدة المعرفة.</p><div className="timeline-placeholder"><span className="timeline-dot"/><div><strong>سجل التطورات</strong><small>ترتيب زمني، مع تمييز تاريخ الوقوع عن تاريخ النشر</small></div></div></section><section className="event-panel"><span className="tag">التوثيق</span><h2>المصادر والوثائق</h2><p>إسناد المعلومات إلى مصادرها الأصلية، وإظهار اختلاف الروايات عند وجوده.</p></section><section className="event-panel"><span className="tag">السياق</span><h2>الكيانات والقضايا</h2><p>علاقات الحدث بالأطراف والقضايا والملفات المرجعية.</p></section></div></main>
+import {getPublicDirectory} from '../../../lib/public-content';
+export default async function EventDetail({params}:{params:Promise<{slug:string}>}){
+ const {slug}=await params;
+ const events=await getPublicDirectory('events');
+ const event=events.find(item=>item.slug===slug);
+ if(!event)notFound();
+ return <main className="knowledge-page">
+ <div className="knowledge-breadcrumb"><Link href="/">الرئيسية</Link><span>←</span><Link href="/events">الأحداث</Link><span>←</span><strong>{event.title_ar}</strong></div>
+ <header className="knowledge-hero"><span className="eyebrow">سجل الحدث</span><h1>{event.title_ar}</h1>{event.summary_ar&&<p>{event.summary_ar}</p>}{event.starts_at&&<p><time dateTime={event.starts_at}>{new Intl.DateTimeFormat('ar-YE',{dateStyle:'long'}).format(new Date(event.starts_at))}</time></p>}</header>
+ <div className="knowledge-columns"><section className="knowledge-primary"><div className="knowledge-section-head"><h2>التطورات</h2><span>المواد المنشورة</span></div><div className="knowledge-empty"><h3>لا توجد تطورات منشورة لهذا الحدث بعد</h3><p>ستظهر التطورات هنا بعد التحقق من معلوماتها ومصادرها واعتمادها.</p></div></section>
+ <aside className="knowledge-aside"><h2>المصادر والسياق</h2><p>ستُعرض المصادر والجهات المرتبطة والتطورات بحسب الإجازة التحريرية لكل مادة.</p><div className="knowledge-links"><Link href="/issues">استكشف القضايا ←</Link><Link href="/dossiers">تصفح الملفات ←</Link></div></aside></div>
+ </main>;
 }
