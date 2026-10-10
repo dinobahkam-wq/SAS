@@ -18,7 +18,7 @@ export default function EventWorkflow({db,eventId,role}:Props){
  setNote(data?.review_note??'');
  });return()=>{live=false}},[db,eventId]);
  async function saveDate(){if(!start)return;setBusy(true);const {error}=await db.rpc('sas_admin_set_event_date',{p_id:eventId,p_starts_at:new Date(start).toISOString()});setBusy(false);setNotice(error?error.message:'حُفظ تاريخ الحدث.')}
- async function act(action:string){setBusy(true);setNotice('');const {data,error}=await db.rpc('sas_event_workflow',{p_id:eventId,p_action:action,p_note:note.trim()});setBusy(false);if(error){setNotice(error.message);return}
+ async function act(action:string){if(action==='publish'&&!window.confirm('هل تؤكد إتاحة هذا الحدث للجمهور؟'))return;setBusy(true);setNotice('');const {data,error}=await db.rpc('sas_event_workflow',{p_id:eventId,p_action:action,p_note:note.trim()});setBusy(false);if(error){setNotice(error.message);return}
  if(action==='check'){setChecks(data?.problems??[]);setReady(data?.ready===true);return}
  if(action==='submit')setStage('review');
  if(action==='approve')setStage('approved');
