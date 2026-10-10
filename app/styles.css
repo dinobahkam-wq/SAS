@@ -120,3 +120,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .admin-links p{font-size:13px;color:#819098;line-height:1.8}
 
 .admin-developments{margin-top:30px;padding-top:24px;border-top:1px solid #edf0f2}.admin-developments h3{font-size:20px;margin:0 0 18px}.admin-developments .admin-records{margin-bottom:22px}.admin-developments form{padding-top:18px;border-top:1px solid #edf0f2}.admin-developments .admin-records a{color:#9b5266;font-size:13px;text-decoration:underline}
+
+.development-editor{padding:20px;border:1px solid #e4e9ec;border-radius:13px;background:#f9fbfc;margin:20px 0;display:grid;gap:18px}.development-editor form{padding-bottom:18px;border-bottom:1px solid #e6ebee}.development-editor h3{font-size:18px;margin:0}.development-editor>button{justify-self:start}
