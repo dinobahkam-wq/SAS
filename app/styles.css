@@ -118,3 +118,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .admin-panel .admin-links label{display:flex;align-items:center;gap:10px;font-weight:500;padding:8px 0;cursor:pointer}
 .admin-panel .admin-links input[type=checkbox]{width:18px;height:18px;accent-color:#9a4d60}
 .admin-links p{font-size:13px;color:#819098;line-height:1.8}
+
+.admin-developments{margin-top:30px;padding-top:24px;border-top:1px solid #edf0f2}.admin-developments h3{font-size:20px;margin:0 0 18px}.admin-developments .admin-records{margin-bottom:22px}.admin-developments form{padding-top:18px;border-top:1px solid #edf0f2}.admin-developments .admin-records a{color:#9b5266;font-size:13px;text-decoration:underline}
