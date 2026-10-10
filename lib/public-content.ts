@@ -33,3 +33,5 @@ async function publicRpc<T>(method:string,payload:object):Promise<T>{
 }
 export const getPublicRelated=(kind:PublicKind,slug:string)=>publicRpc<RelatedEntry[]>('sas_public_related',{p_kind:kind,p_slug:slug});
 export const getPublicDevelopments=(slug:string)=>publicRpc<PublicDevelopment[]>('sas_public_event_developments',{p_slug:slug});
+
+export const getPublicParents=(kind:'issues'|'events',slug:string)=>publicRpc<RelatedEntry[]>('sas_public_parents',{p_kind:kind,p_slug:slug});
