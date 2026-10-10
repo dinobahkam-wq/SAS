@@ -22,3 +22,27 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .site-shell button,.site-shell input,.site-shell textarea,.site-shell select{font-family:var(--font-sas-sans),Tahoma,sans-serif}
 .site-shell p{line-height:1.9}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Editorial refinement 02: measured rhythm, accessible focus, responsive balance */
+:root{--content-measure:68ch;--motion-fast:180ms}
+.site-header{gap:clamp(18px,3vw,42px)}
+.main-nav a{padding-block:10px}
+.main-nav a:focus-visible,.category-list a:focus-visible,.story-footer a:focus-visible,.mini-card:focus-visible,.related-title a:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:3px}
+.section-top h1{font-size:clamp(29px,2.5vw,35px);line-height:1.5}
+.related-title h2{font-size:clamp(22px,2vw,26px);line-height:1.5}
+.lead-content h2{font-size:clamp(24px,2.2vw,30px);line-height:1.65}
+.lead-content p{font-size:clamp(13px,1.02vw,15px);line-height:2.05;max-width:var(--content-measure)}
+.category-list a,.related-card p,.mini-card p{line-height:1.85}
+.category-list a{font-size:13px}
+.related-card h3{font-size:16px}
+.related-card p{font-size:12px}
+.mini-card h4{font-size:16px}
+.mini-card p{font-size:13px}
+.profile-card strong{font-size:14px}
+.profile-card small{font-size:11px}
+.section-pill,.story-read,.story-footer,.related-footer{font-size:12px}
+.lead-story,.related-card,.mini-card{will-change:auto}
+.lead-story:hover,.related-card:hover,.mini-card:hover{border-color:#e0e5e8}
+@media(min-width:1101px) and (max-width:1350px){.page-layout{grid-template-columns:185px minmax(0,1fr) 242px;gap:23px;padding-inline:28px}.main-nav{gap:19px}}
+@media(max-width:650px){.section-top{align-items:start}.section-pill{padding-top:12px}.lead-content h2{font-size:24px}.lead-content p{font-size:14px}.related-card p,.mini-card p{font-size:13px}.site-header{justify-content:space-between}.site-shell{box-shadow:none}}
+@media(prefers-reduced-motion:reduce){.lead-story,.related-card,.mini-card,.main-nav a{transition:none!important}}
