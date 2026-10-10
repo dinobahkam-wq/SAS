@@ -130,3 +130,13 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 
 /* Publication readiness and safe LTR links */
 .publication-gate{margin-top:12px;padding:14px;background:#f4f7f8;border:1px solid #dae3e6;border-radius:12px;display:grid;gap:10px}.publication-gate strong{display:block;margin-bottom:8px}.publication-gate p{margin:6px 0;color:#775c63;font-size:13px}.publication-gate button:last-child{background:#203b4b;color:#fff}.sas-source-link{display:inline-block;direction:ltr;unicode-bidi:isolate;text-align:left;word-break:break-all}.admin-panel input[type=url]{direction:ltr;text-align:left;unicode-bidi:isolate}
+
+/* Independent editorial publication queue */
+.admin-role-line{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px;font-size:14px;color:#73828a}
+.admin-role-line strong{color:#263944}
+.publication-queue{margin-bottom:24px}
+.publication-queue-item{border:1px solid #e6ebee;border-radius:12px;padding:17px;display:grid;gap:10px;margin-top:13px}
+.publication-queue-item>small{font-size:13px;color:#809097}
+.publication-queue-item>div{background:#f7f8fa;padding:12px;border-radius:9px}
+.publication-queue-item>div p{color:#a04d61;font-size:13px;margin:8px 0}
+.publication-queue-item>button{justify-self:start}
