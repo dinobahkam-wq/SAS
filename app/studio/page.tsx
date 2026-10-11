@@ -70,6 +70,20 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  if(lines.length*lineHeight>bottom-top)return {...empty,error:'العنوان طويل جدًا؛ اختصره أو استخدم قالب البيان'};
  return {pages:[{lines}],font,lineHeight,error:'',top,heading,taxonomy};
 }
+function sourceLabel(raw:string):string{
+ if(!raw.trim())return '';
+ try{
+  const parsed=new URL(raw.trim());
+  if(!['https:','http:'].includes(parsed.protocol))return '';
+  return parsed.hostname.replace(/^www\./,'')+parsed.pathname.replace(/\/$/,'');
+ }catch{return ''}
+}
+function ellipsis(ctx:CanvasRenderingContext2D,value:string,maxWidth:number):string{
+ if(ctx.measureText(value).width<=maxWidth)return value;
+ const characters=Array.from(value);let low=0,high=characters.length;
+ while(low<high){const middle=Math.ceil((low+high)/2);if(ctx.measureText(characters.slice(0,middle).join('')+'…').width<=maxWidth)low=middle;else high=middle-1}
+ return characters.slice(0,low).join('')+'…';
+}
 function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;error:string}{
  const {w,h}=sizes[cfg.format];canvas.width=w;canvas.height=h;
  const ctx=canvas.getContext('2d');if(!ctx)return {total:0,error:'تعذر فتح محرك الرسم'};
@@ -127,6 +141,13 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
  }
  ctx.direction='ltr';ctx.textAlign='left';ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.fillText(cfg.date,72,foot+53);
  if(cfg.mode==='statement'){ctx.fillText(String(index+1)+' / '+String(pages.length),72,foot+89)}
+ const source=sourceLabel(cfg.sourceUrl);
+ if(source){
+  ctx.direction='ltr';ctx.textAlign='left';ctx.fillStyle=c.dim;ctx.font='400 20px '+serif;
+  const available=badgeX-72-22;
+  const label=ellipsis(ctx,'المصدر: '+source,available);
+  ctx.fillText(label,72,cfg.mode==='statement'?foot+119:foot+95);
+ }
  return {total:pages.length,error:''};
 }
 async function getLogo():Promise<HTMLImageElement|null>{
@@ -204,8 +225,8 @@ export default function Studio(){
  <h2>إعداد المادة</h2>
  <label>نوع التصميم<select value={mode} onChange={e=>{setMode(e.target.value as Mode);setPage(0)}}>{(Object.keys(modes) as Mode[]).map(k=><option key={k} value={k}>{modes[k]}</option>)}</select></label>
  <label>{mode==='statement'?'عنوان البيان (حتى 120 حرفًا)':'نص الخبر'}<textarea rows={3} maxLength={mode==='statement'?120:900} value={title} onChange={e=>{setTitle(e.target.value);setPage(0)}}/></label>
- <label>رابط المصدر (اختياري، لا يظهر بخط العنوان)<input dir="ltr" type="url" placeholder="https://..." value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)}/></label>
- {sourceUrl&&<p className="studio-note">احتُفظ بالرابط في المحرر للرجوع إليه. لا يُدمج داخل عنوان الصورة أو نص البيان.</p>}
+ <label>رابط المصدر (اختياري — يظهر مختصرًا أسفل الصورة)<input dir="ltr" type="url" placeholder="https://..." value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)}/></label>
+ {sourceUrl&&<p className="studio-note">سيظهر اسم نطاق المصدر ومساره بصورة مختصرة أسفل التاريخ؛ يبقى الرابط الكامل في هذا الحقل.</p>}
  {mode==='statement'&&<><label>الجهة المصدرة<input value={issuer} maxLength={160} onChange={e=>setIssuer(e.target.value)}/></label>
  <label>شعار الجهة (اختياري · PNG/JPEG/WebP · 5MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void setIssuerImage(e.target.files?.[0])}/></label>
  {issuerLogo&&<button type="button" onClick={()=>{setIssuerLogo(null);setIssuerLogoError('')}}>حذف شعار الجهة</button>}
