@@ -155,7 +155,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
  if(cfg.showSource&&name){
   ctx.textAlign='right';ctx.direction='rtl';ctx.font='500 25px '+serif;
   const available=badgeX-72-32;
-  ctx.fillText(ellipsis(ctx,'المصدر: '+name,available),badgeX-30,foot+31);
+  ctx.fillText(ellipsis(ctx,'المصدر: '+name,available),badgeX-30,foot+27);
  }
  return {total:pages.length,error:''};
 }
@@ -176,7 +176,7 @@ export default function Studio(){
  const [sourceUrl,setSourceUrl]=useState('');
  const [sourceName,setSourceName]=useState('');
  const [showSource,setShowSource]=useState(true);
- const [textSize,setTextSize]=useState(70);
+ const [textSize,setTextSize]=useState(78);
  const [textWeight,setTextWeight]=useState<Weight>(700);
  const [align,setAlign]=useState<Align>('right');
  const [underline,setUnderline]=useState(false);
@@ -241,7 +241,7 @@ export default function Studio(){
  <header className="knowledge-hero"><span className="eyebrow">استوديو ساس · V2</span><h1>صور الأخبار والبيانات</h1><p>معاينة وتصدير محلي دون نشر آلي أو تعديل تلقائي للبيان.</p></header>
  <div className="studio-layout"><section className="admin-panel studio-fields">
  <h2>إعداد المادة</h2>
- <label>نوع التصميم<select value={mode} onChange={e=>{setMode(e.target.value as Mode);setPage(0)}}>{(Object.keys(modes) as Mode[]).map(k=><option key={k} value={k}>{modes[k]}</option>)}</select></label>
+ <label>نوع التصميم<select value={mode} onChange={e=>{const next=e.target.value as Mode;setMode(next);setTextSize(next==='statement'?43:78);setSideMargin(next==='statement'?120:76);setLineSpacing(next==='statement'?1.65:1.45);setPage(0)}}>{(Object.keys(modes) as Mode[]).map(k=><option key={k} value={k}>{modes[k]}</option>)}</select></label>
  <label>{mode==='statement'?'عنوان البيان (حتى 120 حرفًا)':'نص الخبر'}<textarea rows={3} maxLength={mode==='statement'?120:900} value={title} onChange={e=>{setTitle(e.target.value);setPage(0)}}/></label>
  <label>اسم المصدر (اختياري)<input value={sourceName} maxLength={120} placeholder="وكيل حضرموت الإخباري" onChange={e=>setSourceName(e.target.value)}/></label>
  <label>رابط المصدر (اختياري)<input dir="ltr" type="url" placeholder="https://..." value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)}/></label>
@@ -260,7 +260,7 @@ export default function Studio(){
  <label>لوحة الألوان<select value={skin} onChange={e=>setSkin(e.target.value as Skin)}><option value="forest">أخضر عميق</option><option value="ink">حبر داكن</option><option value="ivory">عاجي</option><option value="navy">كحلي مؤسسي</option><option value="olive">زيتوني</option><option value="stone">رمادي دافئ</option><option value="rose">وردي ترابي</option></select></label>
  <fieldset className="studio-options"><legend>تخصيصات التصميم</legend><label><input type="checkbox" checked={showPath} onChange={e=>setShowPath(e.target.checked)}/> إظهار مسار التصنيف</label>{mode==='statement'&&<><label>وزن متن البيان<select value={bodyWeight} onChange={e=>setBodyWeight(Number(e.target.value) as 300|400)}><option value={300}>Light — خفيف</option><option value={400}>Regular — عادي</option></select></label><label>حجم عنوان البيان: {titleSize}px<input type="range" min={52} max={74} step={2} value={titleSize} onChange={e=>setTitleSize(Number(e.target.value))}/></label></>}</fieldset>
  <fieldset className="studio-options"><legend>تنسيق النص والإطار غير المرئي</legend>
- <label>حجم النص الرئيسي: {mode==='statement'?textSize:textSize} بكسل<input type="range" min={32} max={104} step={2} value={textSize} onChange={e=>setTextSize(Number(e.target.value))}/></label>
+ <label>حجم النص الرئيسي: {textSize} بكسل<input type="range" min={32} max={104} step={2} value={textSize} onChange={e=>setTextSize(Number(e.target.value))}/></label>
  <label>سماكة نص الخبر<select value={textWeight} onChange={e=>setTextWeight(Number(e.target.value) as Weight)}><option value={300}>خفيف</option><option value={400}>عادي</option><option value={500}>متوسط</option><option value={700}>عريض</option></select></label>
  <label>المحاذاة<select value={align} onChange={e=>setAlign(e.target.value as Align)}><option value="right">يمين</option><option value="center">توسيط</option></select></label>
  <label>موضع النص<select value={vertical} onChange={e=>setVertical(e.target.value as 'top'|'center'|'bottom')}><option value="top">أعلى الإطار</option><option value="center">وسط الإطار</option><option value="bottom">أسفل الإطار</option></select></label>
