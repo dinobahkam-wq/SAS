@@ -153,7 +153,7 @@ function sourceText(cfg:Config){
  return cfg.showSource&&value?cfg.sourcePrefix+' '+value:'';
 }
 function calendarDate(value:string,showWeekday:boolean){
- const match=/^(\\d{4})\\/(\\d{2})\\/(\\d{2})$/.exec(value.trim());
+ const match=new RegExp('^([0-9]{4})/([0-9]{2})/([0-9]{2})$').exec(value.trim());
  if(!match)return value;
  const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
  const d=new Date(Date.UTC(year,month-1,day));
@@ -176,7 +176,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  const photoY=cfg.imageDY;
  const titleFont=font,lh=titleFont*cfg.lineSpacing;
  const dy=cfg.headlineDY+(topPhoto?photoH+cfg.detailSpacing:0);
- const words=cfg.title.trim().replace(/\\s+/g,' ').split(' ').filter(Boolean);
+ const words=cfg.title.trim().match(/\S+/g)??[];
  const rows:HeadlineRow[]=[];
  const spare=Math.abs(cfg.headlineDX)+cfg.headlineInset;
  const baseLeft=margin+spare,baseRight=w-margin-spare;
@@ -489,13 +489,14 @@ export default function Studio(){
  <label>حجم الصورة: {photoScale}%<input type="range" min={45} max={130} step={5} value={photoScale} onChange={e=>setPhotoScale(Number(e.target.value))}/></label>
  {photoPosition==='background'&&<label><input type="checkbox" checked={hidePathOnBackground} onChange={e=>setHidePathOnBackground(e.target.checked)}/> إخفاء مسار التصنيف فوق الصورة الخلفية</label>}
  {photoPosition==='background'&&<label>شفافية الخلفية: {photoOpacity}%<input type="range" min={15} max={80} step={5} value={photoOpacity} onChange={e=>setPhotoOpacity(Number(e.target.value))}/></label>}
- <label><input type="checkbox" checked={photoRounded} onChange={e=>setPhotoRounded(e.target.checked)}/> تفعيل الاستدارة عند اختيار إطار مستدير</label> {newsImage&&<><label>شكل إطار الصورة<select value={imageShape} onChange={e=>setImageShape(e.target.value as PhotoShape)}>
+ <label><input type="checkbox" checked={photoRounded} onChange={e=>setPhotoRounded(e.target.checked)}/> تفعيل الاستدارة عند اختيار إطار مستدير</label> <label>شكل إطار الصورة<select value={imageShape} onChange={e=>setImageShape(e.target.value as PhotoShape)}>
  <option value="square">مستطيل حاد</option><option value="rounded">زوايا مستديرة</option><option value="mixed">زوايا مختلطة</option><option value="circle">دائرة</option><option value="oval">بيضاوي</option><option value="hexagon">سداسي</option><option value="angled">غير منتظم</option><option value="fade">حواف متلاشية</option></select></label>
  {(imageShape==='rounded'||imageShape==='mixed')&&<label>استدارة الحواف {imageRadius}px<input type="range" min={0} max={80} step={5} value={imageRadius} onChange={e=>setImageRadius(Number(e.target.value))}/></label>}
  <label>سمك إطار الصورة {imageBorder}px<input type="range" min={0} max={10} step={1} value={imageBorder} onChange={e=>setImageBorder(Number(e.target.value))}/></label>
  <label>مصدر الصورة / حقوقها<input value={imageCredit} maxLength={150} placeholder="تصوير: منصة ساس / © الجهة المصورة" onChange={e=>setImageCredit(e.target.value)}/></label>
  <label><input type="checkbox" checked={showImageCredit} onChange={e=>setShowImageCredit(e.target.checked)}/> إظهار حقوق الصورة</label>
- {showImageCredit&&imageCredit.trim()&&<label>مكان حقوق الصورة<select value={imageCreditPlacement} onChange={e=>setImageCreditPlacement(e.target.value as PhotoCreditPlacement)}><option value="inside">داخل الصورة</option><option value="below">أسفل الصورة</option></select></label>}</>}</>}
+ {showImageCredit&&imageCredit.trim()&&<label>مكان حقوق الصورة<select value={imageCreditPlacement} onChange={e=>setImageCreditPlacement(e.target.value as PhotoCreditPlacement)}><option value="inside">داخل الصورة</option><option value="below">أسفل الصورة</option></select></label>}
+ </>}
  </fieldset>}
  {mode==='quote'&&<><label>اسم المتحدث<input value={quoteName} maxLength={100} onChange={e=>setQuoteName(e.target.value)}/></label><label>صفة المتحدث<input value={quoteRole} maxLength={150} onChange={e=>setQuoteRole(e.target.value)}/></label><label>صورة المتحدث (اختيارية، حتى 5MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'person')}/></label>{personImage&&<button type="button" onClick={()=>setPersonImage(null)}>حذف صورة المتحدث</button>}</>}
  {(mode==='news'||mode==='urgent'||mode==='quote')&&<fieldset className="studio-options"><legend>السياق الجغرافي (تمهيد لمحرك الخرائط)</legend><label>المنطقة أو المحافظة<input value={location} maxLength={120} placeholder="حضرموت" onChange={e=>setLocation(e.target.value)}/></label><label><input type="checkbox" checked={showLocation} onChange={e=>setShowLocation(e.target.checked)}/> إظهار اسم الموقع في البطاقة</label></fieldset>}
