@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 type Format='square'|'portrait'|'landscape';
 type Skin='forest'|'ink'|'ivory'|'navy'|'olive'|'stone'|'rose';
-type Mode='news'|'urgent'|'statement';
+type Mode='news'|'urgent'|'statement'|'quote';
 type Align='right'|'center';
 type Weight=300|400|500|700;
 type Page={lines:string[]};
@@ -11,8 +11,8 @@ type Entry={slug:string;title_ar:string;summary_ar:string|null;starts_at:string|
 type Related={slug:string;title:string;kind:'dossiers'|'issues'|'events'};
 const sizes:Record<Format,{w:number;h:number;label:string}>={square:{w:1080,h:1080,label:'مربع 1080 × 1080'},portrait:{w:1080,h:1350,label:'عمودي 1080 × 1350'},landscape:{w:1200,h:675,label:'أفقي 1200 × 675'}};
 const skins:Record<Skin,{bg:string,fg:string,accent:string,dim:string}>={forest:{bg:'#092d28',fg:'#fffefa',accent:'#d6ee91',dim:'#d3e3dc'},ink:{bg:'#182730',fg:'#ffffff',accent:'#e8b5a8',dim:'#cbd4d8'},ivory:{bg:'#faf9f3',fg:'#183833',accent:'#396a53',dim:'#526860'},navy:{bg:'#142a42',fg:'#fffdf6',accent:'#b7d3ee',dim:'#cdd9e3'},olive:{bg:'#333d27',fg:'#fffefa',accent:'#d8dd9b',dim:'#e2e4d0'},stone:{bg:'#eeeae1',fg:'#29322c',accent:'#758778',dim:'#505d52'},rose:{bg:'#f6e9e4',fg:'#412e33',accent:'#a85b6d',dim:'#775c63'}};
-const modes:Record<Mode,string>={news:'خبر',urgent:'عاجل',statement:'بيان رسمي'};
-type Config={mode:Mode;format:Format;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string;sourceName:string;showSource:boolean;textSize:number;textWeight:Weight;align:Align;underline:boolean;sideMargin:number;lineSpacing:number;vertical:'top'|'center'|'bottom'};
+const modes:Record<Mode,string>={news:'خبر',urgent:'عاجل',statement:'بيان رسمي',quote:'تصريح / اقتباس'};
+type Config={mode:Mode;format:Format;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string;sourceName:string;showSource:boolean;textSize:number;textWeight:Weight;align:Align;underline:boolean;sideMargin:number;lineSpacing:number;vertical:'top'|'center'|'bottom';summary:string;location:string;showLocation:boolean;quoteName:string;quoteRole:string;personImage:HTMLImageElement|null;mapImage:HTMLImageElement|null};
 const serif='"Sas Thmanyah Serif","Sas Thmanyah Sans",sans-serif';
 const sans=serif;
 function toLines(ctx:CanvasRenderingContext2D,text:string,maxWidth:number):string[]{
@@ -50,7 +50,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const headerStart=statement?(cfg.issuerLogo?taxBottom+170:taxBottom+14):taxBottom;
  const titleBottom=headerStart+heading.length*(cfg.titleSize*1.32);
  const top=statement?titleBottom+issuerArea+(cfg.issuerLogo?0:25):Math.max(205,taxBottom+35);
- const bottom=h-176;
+ const bottom=h-176-(cfg.mode==='news'||cfg.mode==='urgent'?(cfg.summary.trim()?175:0):0);
  let font=cfg.textSize;
  let lineHeight=font*cfg.lineSpacing;
  if(bottom-top<lineHeight*2)return {...empty,error:'المساحة لا تكفي للنص والتصنيف؛ اختر مقاسًا أطول أو اختصر مسار التصنيف'};
@@ -62,6 +62,14 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
    const pages:Page[]=[];
    for(let i=0;i<lines.length;i+=capacity)pages.push({lines:lines.slice(i,i+capacity)});
    return {pages,font,lineHeight,error:'',top,heading,taxonomy};
+ }
+ if(cfg.mode==='quote'){
+  const qwidth=cfg.personImage?Math.floor(width*.58):width;
+  font=Math.min(font,57);ctx.font=cfg.textWeight+' '+font+'px '+serif;
+  let lines=toLines(ctx,cfg.title.trim(),qwidth);lineHeight=font*cfg.lineSpacing;
+  while(font>30&&lines.length*lineHeight>bottom-top-90){font-=2;ctx.font=cfg.textWeight+' '+font+'px '+serif;lines=toLines(ctx,cfg.title.trim(),qwidth);lineHeight=font*cfg.lineSpacing}
+  if(lines.length*lineHeight>bottom-top-90)return {...empty,error:'الاقتباس طويل جدًا؛ اختصره ليناسب البطاقة'};
+  return {pages:[{lines}],font,lineHeight,error:'',top,heading,taxonomy};
  }
  let lines:string[]=[];
  while(font>=38){
@@ -129,12 +137,33 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   ctx.fillStyle=c.fg;ctx.font=cfg.bodyWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;
   const x=cfg.align==='center'?w/2:w-margin;
   p.lines.forEach((line,j)=>{if(line)drawText(ctx,line,x,top+j*lineHeight,cfg.underline)});ctx.textAlign='right';
+ }else if(cfg.mode==='quote'){
+  if(cfg.personImage){
+   const px=margin,py=top+32,pw=Math.floor((w-margin*2)*.36),ph=Math.min(430,h-355-top);
+   if(ph>90){ctx.save();ctx.beginPath();ctx.roundRect(px,py,pw,ph,22);ctx.clip();const image=cfg.personImage;const ratio=Math.max(pw/image.width,ph/image.height);const iw=image.width*ratio,ih=image.height*ratio;ctx.drawImage(image,px+(pw-iw)/2,py+(ph-ih)/2,iw,ih);ctx.restore()}
+  }
+  const right=w-margin;const quoteWidth=cfg.personImage?(w-margin*2)*.58:w-margin*2;
+  ctx.fillStyle=c.accent;ctx.font='700 35px '+serif;ctx.fillText('❝',right,top-20);
+  ctx.fillStyle=c.fg;ctx.font=cfg.textWeight+' '+font+'px '+serif;
+  p.lines.forEach((line,j)=>drawText(ctx,line,right,top+35+j*lineHeight,cfg.underline));
+  const qBottom=top+40+p.lines.length*lineHeight;
+  ctx.fillStyle=c.accent;ctx.fillRect(right-110,qBottom+5,110,5);
+  ctx.fillStyle=c.fg;ctx.font='700 32px '+serif;ctx.fillText(ellipsis(ctx,cfg.quoteName||'المتحدث',quoteWidth),right,qBottom+25);
+  if(cfg.quoteRole){ctx.fillStyle=c.dim;ctx.font='400 24px '+serif;const roles=toLines(ctx,cfg.quoteRole,quoteWidth).slice(0,2);roles.forEach((line,j)=>ctx.fillText(line,right,qBottom+68+j*34))}
  }else{
   ctx.fillStyle=c.fg;ctx.font=cfg.textWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;
   const maxY=h-176-p.lines.length*lineHeight;
   const y=cfg.vertical==='top'?top:cfg.vertical==='bottom'?maxY:Math.max(top,Math.floor((top+maxY)/2));
   const x=cfg.align==='center'?w/2:w-margin;
   p.lines.forEach((line,j)=>drawText(ctx,line,x,y+j*lineHeight,cfg.underline));ctx.textAlign='right';
+ }
+ if((cfg.mode==='news'||cfg.mode==='urgent')&&cfg.summary.trim()){
+  const sumTop=h-340;const maxWidth=w-margin*2-(cfg.mapImage?205:0);
+  ctx.fillStyle=c.accent;ctx.fillRect(margin,sumTop-18,w-margin*2,2);
+  ctx.font='400 29px '+serif;ctx.fillStyle=c.dim;ctx.textAlign='right';ctx.direction='rtl';
+  const summary=toLines(ctx,cfg.summary,maxWidth);if(summary.length>3)return {total:pages.length,error:'التفاصيل المختصرة تتجاوز ثلاثة أسطر؛ اختصر الموجز'};
+  summary.forEach((line,j)=>ctx.fillText(line,w-margin-(cfg.mapImage?205:0),sumTop+j*44));
+  if(cfg.mapImage){const bx=w-margin-186,by=sumTop-3,bw=181,bh=132;ctx.save();ctx.beginPath();ctx.roundRect(bx,by,bw,bh,12);ctx.clip();const img=cfg.mapImage;const scale=Math.min(bw/img.width,bh/img.height);ctx.fillStyle='#faf9f3';ctx.fillRect(bx,by,bw,bh);ctx.drawImage(img,bx+(bw-img.width*scale)/2,by+(bh-img.height*scale)/2,img.width*scale,img.height*scale);ctx.restore()}
  }
  const foot=h-162;
  ctx.strokeStyle=c.accent;ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(72,foot);ctx.lineTo(w-76,foot);ctx.stroke();ctx.globalAlpha=1;
@@ -148,6 +177,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
  }else{
   ctx.fillStyle='#183833';ctx.font='700 30px '+sans;ctx.textAlign='center';ctx.fillText('ساس',badgeX+badgeW/2,badgeY+42);ctx.textAlign='right';
  }
+ if(cfg.showLocation&&cfg.location.trim()){ctx.fillStyle=c.accent;ctx.font='500 24px '+serif;ctx.direction='rtl';ctx.textAlign='right';ctx.fillText(ellipsis(ctx,'الموقع: '+cfg.location,w-margin*2),w-margin,foot-47)}
  ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.direction='ltr';ctx.textAlign='left';
  ctx.fillText(cfg.date,72,foot+92);
  if(cfg.mode==='statement')ctx.fillText(String(index+1)+' / '+String(pages.length),72,foot+120);
@@ -184,6 +214,14 @@ export default function Studio(){
  const [lineSpacing,setLineSpacing]=useState(1.45);
  const [vertical,setVertical]=useState<'top'|'center'|'bottom'>('center');
  const [body,setBody]=useState('');
+ const [summary,setSummary]=useState('');
+ const [location,setLocation]=useState('');
+ const [showLocation,setShowLocation]=useState(true);
+ const [quoteName,setQuoteName]=useState('');
+ const [quoteRole,setQuoteRole]=useState('');
+ const [personImage,setPersonImage]=useState<HTMLImageElement|null>(null);
+ const [mapImage,setMapImage]=useState<HTMLImageElement|null>(null);
+ const [mediaError,setMediaError]=useState('');
  const [issuer,setIssuer]=useState('');
  const [issuerLogo,setIssuerLogo]=useState<HTMLImageElement|null>(null);
  const [issuerLogoError,setIssuerLogoError]=useState('');
@@ -192,7 +230,7 @@ export default function Studio(){
  const [page,setPage]=useState(0);const [count,setCount]=useState(0);
  const [error,setError]=useState('');const [logo,setLogo]=useState<HTMLImageElement|null>(null);
  const [exporting,setExporting]=useState(false);const canvas=useRef<HTMLCanvasElement>(null);
- const cfg=useMemo(()=>({mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical}),[mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical]);
+ const cfg=useMemo(()=>({mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage}),[mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage]);
  useEffect(()=>{let live=true;const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key){setDirectoryError('لم يكتمل اتصال Supabase');return}
  const rpc=async<T,>(name:string,args:object):Promise<T>=>{const response=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!response.ok)throw new Error('تعذر تحميل التصنيفات');return await response.json() as T};
  void Promise.all((['dossiers','issues','events'] as const).map(async kind=>[kind,await rpc<Entry[]>('sas_public_directory',{p_kind:kind})] as const)).then(items=>{if(live)setDirectory(Object.fromEntries(items) as Record<'dossiers'|'issues'|'events',Entry[]>)}).catch(()=>{if(live)setDirectoryError('تعذر تحميل قوائم ساس')});
@@ -209,6 +247,13 @@ export default function Studio(){
    if(live){setError(result.error);setCount(result.total);if(page>=result.total&&result.total>0)setPage(result.total-1)}
   }catch{if(live)setError('فشل تحميل الخطوط أو الرسم')}
  })()},120);return()=>{live=false;clearTimeout(id)}},[cfg,page]);
+ async function loadMedia(file:File|undefined,kind:'person'|'map'){
+  const setter=kind==='person'?setPersonImage:setMapImage;
+  if(!file){setter(null);setMediaError('');return}
+  if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>5*1024*1024){setMediaError('الصورة يجب أن تكون PNG أو JPEG أو WebP بحجم حتى 5MB');return}
+  const url=URL.createObjectURL(file);
+  try{const image=await new Promise<HTMLImageElement>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('invalid'));img.src=url});setter(image);setMediaError('');setPage(0)}catch{setMediaError('تعذر قراءة ملف الصورة')}finally{URL.revokeObjectURL(url)}
+ }
  async function setIssuerImage(file:File|undefined){
   if(!file){setIssuerLogo(null);setIssuerLogoError('');return}
   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>5*1024*1024){setIssuerLogoError('يجب رفع صورة PNG أو JPEG أو WebP بحجم لا يتجاوز 5MB');return}
@@ -238,11 +283,15 @@ export default function Studio(){
   }catch{setError('تعذر التصدير؛ تحقق من إعدادات تنزيل الملفات المتعددة')}finally{setExporting(false)}
  }
  return <main className="knowledge-page studio-page">
- <header className="knowledge-hero"><span className="eyebrow">استوديو ساس · V2</span><h1>صور الأخبار والبيانات</h1><p>معاينة وتصدير محلي دون نشر آلي أو تعديل تلقائي للبيان.</p></header>
+ <header className="knowledge-hero"><span className="eyebrow">استوديو ساس · V2</span><h1>استوديو المنتجات البصرية</h1><p>معاينة وتصدير محلي دون نشر آلي أو تعديل تلقائي للبيان.</p></header>
  <div className="studio-layout"><section className="admin-panel studio-fields">
  <h2>إعداد المادة</h2>
  <label>نوع التصميم<select value={mode} onChange={e=>{const next=e.target.value as Mode;setMode(next);setTextSize(next==='statement'?43:78);setSideMargin(next==='statement'?120:76);setLineSpacing(next==='statement'?1.65:1.45);setPage(0)}}>{(Object.keys(modes) as Mode[]).map(k=><option key={k} value={k}>{modes[k]}</option>)}</select></label>
- <label>{mode==='statement'?'عنوان البيان (حتى 120 حرفًا)':'نص الخبر'}<textarea rows={3} maxLength={mode==='statement'?120:900} value={title} onChange={e=>{setTitle(e.target.value);setPage(0)}}/></label>
+ <label>{mode==='statement'?'عنوان البيان (حتى 120 حرفًا)':mode==='quote'?'نص التصريح أو الاقتباس':'عنوان الخبر'}<textarea rows={3} maxLength={mode==='statement'?120:900} value={title} onChange={e=>{setTitle(e.target.value);setPage(0)}}/></label>
+ {(mode==='news'||mode==='urgent')&&<><label>تفاصيل مختصرة للخبر<textarea rows={4} maxLength={260} value={summary} onChange={e=>{setSummary(e.target.value);setPage(0)}} placeholder="موجز تكميلي يظهر أسفل العنوان في مساحة مستقلة"/></label></>}
+ {mode==='quote'&&<><label>اسم المتحدث<input value={quoteName} maxLength={100} onChange={e=>setQuoteName(e.target.value)}/></label><label>صفة المتحدث<input value={quoteRole} maxLength={150} onChange={e=>setQuoteRole(e.target.value)}/></label><label>صورة المتحدث (اختيارية، حتى 5MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'person')}/></label>{personImage&&<button type="button" onClick={()=>setPersonImage(null)}>حذف صورة المتحدث</button>}</>}
+ {(mode==='news'||mode==='urgent'||mode==='quote')&&<fieldset className="studio-options"><legend>السياق الجغرافي (تمهيد لمحرك الخرائط)</legend><label>المنطقة أو المحافظة<input value={location} maxLength={120} placeholder="حضرموت" onChange={e=>setLocation(e.target.value)}/></label><label><input type="checkbox" checked={showLocation} onChange={e=>setShowLocation(e.target.checked)}/> إظهار اسم الموقع في البطاقة</label>{(mode==='news'||mode==='urgent')&&<><label>صورة خريطة مصغرة موثقة (اختيارية)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'map')}/></label>{mapImage&&<button type="button" onClick={()=>setMapImage(null)}>حذف الخريطة المضافة</button>}<small>لا يرسم الاستوديو حدود المحافظات أو يلوّنها تلقائيًا حاليًا. أضف فقط خريطة موثوقة؛ سيتم الربط بمحرك الخرائط لاحقًا.</small></>}</fieldset>}
+ {mediaError&&<p role="alert" className="admin-feedback">{mediaError}</p>}
  <label>اسم المصدر (اختياري)<input value={sourceName} maxLength={120} placeholder="وكيل حضرموت الإخباري" onChange={e=>setSourceName(e.target.value)}/></label>
  <label>رابط المصدر (اختياري)<input dir="ltr" type="url" placeholder="https://..." value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)}/></label>
  {(sourceUrl||sourceName)&&<p className="studio-note">سيظهر اسم المصدر أعلى تاريخ البطاقة في منطقة مستقلة. يُستخرج الاسم من الرابط إذا تركت حقل الاسم فارغًا.</p>}
