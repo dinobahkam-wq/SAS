@@ -174,3 +174,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .explorer-permalink{font-size:13px;margin-top:8px}
 .explorer button:focus-visible,.explorer input:focus-visible{outline:2px solid #925268;outline-offset:2px}
 @media(max-width:820px){.explorer-layout{gap:12px}.explorer-list,.explorer-detail{padding:16px}.explorer-list{max-height:310px;overflow:auto}.explorer-detail>h2{font-size:25px}}
+
+.admin-record-filter{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.admin-record-filter input{flex:1;min-width:150px}.admin-record-filter input,.admin-record-filter select{border:1px solid #dce5e9;background:#fff;padding:10px 12px;border-radius:10px;font:inherit}
