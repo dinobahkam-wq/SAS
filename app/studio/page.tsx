@@ -7,14 +7,20 @@ type Align='right'|'center';
 type Weight=300|400|500|700;
 type PhotoPosition='left'|'right'|'top'|'background';
 type PhotoFit='cover'|'contain';
-type Page={lines:string[]};
+type PhotoShape='square'|'rounded'|'circle'|'oval'|'hexagon'|'angled'|'mixed'|'fade';
+type SourcePlacement='before-summary'|'after-summary';
+type PhotoCreditPlacement='inside'|'below';
+type HeadlineRow={text:string;left:number;right:number;y:number};
+type PhotoRect={x:number;y:number;w:number;h:number};
+type NewsGeometry={rows:HeadlineRow[];photo:PhotoRect|null;summaryLines:string[];summaryY:number;summaryRight:number;summaryFont:number;summaryLineHeight:number;source:string;sourceY:number|null;sourceRight:number;creditBelowY:number|null};
+type Page={lines:string[];news?:NewsGeometry};
 type KnowledgePath={dossier:string;issue:string;event:string};
 type Entry={slug:string;title_ar:string;summary_ar:string|null;starts_at:string|null};
 type Related={slug:string;title:string;kind:'dossiers'|'issues'|'events'};
 const sizes:Record<Format,{w:number;h:number;label:string}>={square:{w:1080,h:1080,label:'مربع 1080 × 1080'},portrait:{w:1080,h:1350,label:'عمودي 1080 × 1350'},landscape:{w:1200,h:675,label:'أفقي 1200 × 675'},wide:{w:1600,h:900,label:'عريض 1600 × 900'},story:{w:1080,h:1920,label:'ستوري 1080 × 1920'},custom:{w:1080,h:1350,label:'مقاس مخصص'}};
 const skins:Record<Skin,{bg:string,fg:string,accent:string,dim:string}>={forest:{bg:'#092d28',fg:'#fffefa',accent:'#d6ee91',dim:'#d3e3dc'},ink:{bg:'#182730',fg:'#ffffff',accent:'#e8b5a8',dim:'#cbd4d8'},ivory:{bg:'#faf9f3',fg:'#183833',accent:'#396a53',dim:'#526860'},navy:{bg:'#142a42',fg:'#fffdf6',accent:'#b7d3ee',dim:'#cdd9e3'},olive:{bg:'#333d27',fg:'#fffefa',accent:'#d8dd9b',dim:'#e2e4d0'},stone:{bg:'#eeeae1',fg:'#29322c',accent:'#758778',dim:'#505d52'},rose:{bg:'#f6e9e4',fg:'#412e33',accent:'#a85b6d',dim:'#775c63'}};
 const modes:Record<Mode,string>={news:'خبر',urgent:'عاجل',statement:'بيان رسمي',quote:'تصريح / اقتباس'};
-type Config={mode:Mode;format:Format;customWidth:number;customHeight:number;topPadding:number;bottomPadding:number;detailSpacing:number;summaryLineSpacing:number;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string;sourceName:string;showSource:boolean;textSize:number;textWeight:Weight;align:Align;underline:boolean;sideMargin:number;lineSpacing:number;vertical:'top'|'center'|'bottom';summary:string;location:string;showLocation:boolean;quoteName:string;quoteRole:string;personImage:HTMLImageElement|null;mapImage:HTMLImageElement|null;newsImage:HTMLImageElement|null;photoPosition:PhotoPosition;photoFit:PhotoFit;photoScale:number;photoOpacity:number;photoRounded:boolean;titleScale:number;hidePathOnBackground:boolean};
+type Config={mode:Mode;format:Format;customWidth:number;customHeight:number;topPadding:number;bottomPadding:number;detailSpacing:number;summaryLineSpacing:number;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string;sourceName:string;showSource:boolean;textSize:number;textWeight:Weight;align:Align;underline:boolean;sideMargin:number;lineSpacing:number;vertical:'top'|'center'|'bottom';summary:string;location:string;showLocation:boolean;quoteName:string;quoteRole:string;personImage:HTMLImageElement|null;mapImage:HTMLImageElement|null;newsImage:HTMLImageElement|null;photoPosition:PhotoPosition;photoFit:PhotoFit;photoScale:number;photoOpacity:number;photoRounded:boolean;titleScale:number;hidePathOnBackground:boolean;showWeekday:boolean;sourcePlacement:SourcePlacement;sourcePrefix:string;headlineDX:number;headlineDY:number;headlineInset:number;summaryDX:number;summaryDY:number;summaryInset:number;summarySize:number;sourceDX:number;sourceDY:number;imageDX:number;imageDY:number;imageInset:number;imageShape:PhotoShape;imageRadius:number;imageBorder:number;imageCredit:string;showImageCredit:boolean;imageCreditPlacement:PhotoCreditPlacement;wrapHeadline:boolean};
 function dimensions(cfg:Config){return cfg.format==='custom'?{w:cfg.customWidth,h:cfg.customHeight}:sizes[cfg.format]}
 const serif='"Sas Thmanyah Serif","Sas Thmanyah Sans",sans-serif';
 const sans=serif;
@@ -76,33 +82,16 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
   if(lines.length*lineHeight>bottom-top-90)return {...empty,error:'الاقتباس طويل جدًا؛ اختصره ليناسب البطاقة'};
   return {pages:[{lines}],font,lineHeight,error:'',top,heading,taxonomy};
  }
- // News V3-C: determine media, title and summary sizes against one common budget.
- const photo=photoBox(cfg,w,h,margin);
- const photographic=Boolean(photo&&cfg.photoPosition!=='background');
- const sidePhoto=photographic&&(cfg.photoPosition==='left'||cfg.photoPosition==='right');
- const hasDetail=Boolean(cfg.summary.trim()||cfg.mapImage);
- const mapW=cfg.mapImage?Math.min(180,Math.floor(width*.27)):0;
- const titleWidth=sidePhoto&&photo?width-photo.w-42:width;
- const summaryWidth=width-(mapW?mapW+22:0);
- const briefFont=Math.max(20,Math.min(31,Math.round(w*.026)));
- ctx.font='400 '+briefFont+'px '+serif;
- const brief=cfg.summary.trim()?toLines(ctx,cfg.summary.trim(),summaryWidth):[];
- const briefHeight=Math.max(brief.length*briefFont*cfg.summaryLineSpacing,cfg.mapImage?Math.min(142,Math.round(w*.125)):0);
- const detailHeight=hasDetail?cfg.detailSpacing+briefHeight:0;
- const photoHeight=photographic&&photo?(cfg.photoPosition==='top'?photo.h+cfg.detailSpacing:photo.h):0;
- let lines:string[]=[];let fit=false;
- font=Math.min(font,Math.round((sidePhoto?Math.max(32,w*.046):cfg.newsImage&&cfg.photoPosition==='background'?Math.max(36,w*.057):Math.max(42,w*.065))*cfg.titleScale/100));
+ // One geometry is shared between rendering and export; never silently discard text.
+ let layout:NewsGeometry|null=null;
+ font=Math.min(font,Math.round(((cfg.newsImage&&(cfg.photoPosition==='left'||cfg.photoPosition==='right'))?Math.max(32,w*.046):cfg.newsImage&&cfg.photoPosition==='background'?Math.max(36,w*.057):Math.max(42,w*.065))*cfg.titleScale/100));
  while(font>=26){
-  ctx.font=cfg.textWeight+' '+font+'px '+serif;
-  lines=toLines(ctx,cfg.title.trim(),titleWidth);lineHeight=font*cfg.lineSpacing;
-  const titleHeight=lines.length*lineHeight;
-  const mediaHeight=sidePhoto?Math.max(titleHeight,photoHeight):titleHeight+photoHeight;
-  const totalHeight=mediaHeight+detailHeight;
-  if(totalHeight<=bottom-top-12){fit=true;break}
-  font-=2;
+  ctx.font=cfg.textWeight+' '+font+'px '+serif;lineHeight=font*cfg.lineSpacing;
+  layout=newsGeometry(cfg,ctx,top,bottom,font);
+  if(layout)break;font-=2;
  }
- if(!fit)return {...empty,error:'الصورة والنص لا يتسعان لهذا المقاس؛ استخدم مقاسًا أكبر أو خفف حجم الصورة والهوامش'};
- return {pages:[{lines}],font,lineHeight,error:'',top,heading,taxonomy};
+ if(!layout)return {...empty,error:'عناصر البطاقة لا تتسع للمقاس الحالي. زد الارتفاع أو خفّف حجم الصورة والنص والهوامش.'};
+ return {pages:[{lines:layout.rows.map(row=>row.text),news:layout}],font,lineHeight,error:'',top,heading,taxonomy};
 }
 function photoBox(cfg:Config,w:number,h:number,margin:number){
  if(!cfg.newsImage)return null;
@@ -124,6 +113,99 @@ function paintPhoto(ctx:CanvasRenderingContext2D,img:HTMLImageElement,box:{x:num
  const iw=img.width*factor,ih=img.height*factor;
  ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
  ctx.restore();
+}
+function clamp(value:number,min:number,max:number){return Math.max(min,Math.min(max,value))}
+function sourceText(cfg:Config){
+ const value=cfg.sourceName.trim()||sourceLabel(cfg.sourceUrl);
+ return cfg.showSource&&value?cfg.sourcePrefix+' '+value:'';
+}
+function calendarDate(value:string,showWeekday:boolean){
+ const match=/^(\\d{4})\\/(\\d{2})\\/(\\d{2})$/.exec(value.trim());
+ if(!match)return value;
+ const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
+ const d=new Date(Date.UTC(year,month-1,day));
+ if(d.getUTCFullYear()!==year||d.getUTCMonth()!==month-1||d.getUTCDate()!==day)return value;
+ return showWeekday?['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getUTCDay()]+'  '+value:value;
+}
+function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:number,font:number):NewsGeometry|null{
+ const {w,h}=dimensions(cfg),margin=cfg.sideMargin,fullWidth=w-2*margin;
+ const hasPhoto=Boolean(cfg.newsImage),background=hasPhoto&&cfg.photoPosition==='background';
+ const side=hasPhoto&&(cfg.photoPosition==='left'||cfg.photoPosition==='right');
+ const topPhoto=hasPhoto&&cfg.photoPosition==='top';
+ const frame=hasPhoto?photoBox(cfg,w,h,margin):null;
+ const creditBelow=Boolean(hasPhoto&&cfg.showImageCredit&&cfg.imageCredit.trim()&&cfg.imageCreditPlacement==='below'&&!background);
+ const creditH=creditBelow?31:0;
+ const pad=cfg.imageInset;
+ const photoW=frame&&!background?Math.min(frame.w,fullWidth-pad*2):0;
+ const photoH=frame&&!background?frame.h:0;
+ const gap=36;
+ const photoX=frame?clamp(frame.x+cfg.imageDX,margin+pad,w-margin-pad-frame.w):0;
+ const photoY=cfg.imageDY;
+ const titleFont=font,lh=titleFont*cfg.lineSpacing;
+ const dy=cfg.headlineDY+(topPhoto?photoH+cfg.detailSpacing:0);
+ const words=cfg.title.trim().replace(/\\s+/g,' ').split(' ').filter(Boolean);
+ const rows:HeadlineRow[]=[];
+ const spare=Math.abs(cfg.headlineDX)+cfg.headlineInset;
+ const baseLeft=margin+spare,baseRight=w-margin-spare;
+ const photoRight=cfg.photoPosition==='right';
+ for(let index=0;words.length&&index<90;index++){
+  const lineY=dy+index*lh;
+  const intersects=side&&Boolean(frame)&&(
+   !cfg.wrapHeadline || (lineY<photoY+photoH+creditH+16&&lineY+lh>photoY-16)
+  );
+  let left=baseLeft,right=baseRight;
+  if(intersects){if(photoRight)right=Math.min(right,photoX-gap);else left=Math.max(left,photoX+photoW+gap)}
+  const maxWidth=right-left;
+  if(maxWidth<95)return null;
+  let line='';
+  while(words.length){
+   const word=words[0],candidate=line?line+' '+word:word;
+   if(ctx.measureText(candidate).width<=maxWidth){line=candidate;words.shift();continue}
+   if(line)break;
+   const chars=Array.from(word);let used=0,chunk='';
+   for(const ch of chars){if(ctx.measureText(chunk+ch).width>maxWidth&&chunk)break;chunk+=ch;used++}
+   if(!chunk)return null;
+   line=chunk;if(used===chars.length)words.shift();else words[0]=chars.slice(used).join('');
+   break;
+  }
+  if(!line)return null;
+  rows.push({text:line,left:left+cfg.headlineDX,right:right+cfg.headlineDX,y:lineY});
+ }
+ if(words.length)return null;
+ const titleBottom=rows.length?rows[rows.length-1].y+lh:dy;
+ const photoBottom=side?photoY+photoH+creditH:topPhoto?photoY+photoH+creditH:0;
+ const mediaBottom=Math.max(titleBottom,photoBottom);
+ const source=sourceText(cfg);
+ const sourceH=source?32:0;
+ const summaryFont=cfg.summarySize,summaryLineHeight=summaryFont*cfg.summaryLineSpacing;
+ const sumSpace=Math.abs(cfg.summaryDX)+cfg.summaryInset;
+ const summaryRight=w-margin-sumSpace+cfg.summaryDX;
+ const summaryWidth=fullWidth-2*sumSpace;
+ ctx.font='400 '+summaryFont+'px '+serif;
+ const summaryLines=cfg.summary.trim()?toLines(ctx,cfg.summary.trim(),summaryWidth):[];
+ const summaryH=summaryLines.length*summaryLineHeight;
+ let next=mediaBottom+(summaryLines.length||source?cfg.detailSpacing:0);
+ let sourceY:number|null=null,summaryY=0;
+ if(source&&cfg.sourcePlacement==='before-summary'){
+  sourceY=next+Math.max(-12,cfg.sourceDY);next+=sourceH+12;
+ }
+ if(summaryLines.length){summaryY=next+Math.max(-12,cfg.summaryDY);next=Math.max(next,summaryY)+summaryH}
+ if(source&&cfg.sourcePlacement==='after-summary'){
+  sourceY=next+(summaryLines.length?18:0)+Math.max(-12,cfg.sourceDY);next=Math.max(next,sourceY)+sourceH;
+ }
+ const low=Math.min(0,dy,photoY,summaryY||(sourceY??0),sourceY??0);
+ const high=Math.max(titleBottom,photoBottom,next,0);
+ const total=high-low+12;
+ if(total>bottom-top)return null;
+ const free=bottom-top-total;
+ const origin=cfg.vertical==='top'?top-low:cfg.vertical==='bottom'?top+free-low:top+free/2-low;
+ for(const row of rows)row.y+=origin;
+ const imageRect=frame?background
+ ?{x:clamp(frame.x+cfg.imageDX,margin+pad,w-margin-pad-frame.w),y:top+10+cfg.imageDY,w:frame.w,h:Math.max(80,bottom-top-24)}
+ :{x:photoX,y:origin+photoY,w:frame.w,h:photoH}:null;
+ return {rows,photo:imageRect,summaryLines,summaryY:origin+summaryY,summaryRight,summaryFont,summaryLineHeight,
+ source,sourceY:sourceY===null?null:origin+sourceY,sourceRight:clamp(w-margin-40+cfg.sourceDX,margin+150,w-margin),
+ creditBelowY:creditBelow&&imageRect?imageRect.y+imageRect.h+5:null};
 }
 function sourceLabel(raw:string):string{
  if(!raw.trim())return '';
