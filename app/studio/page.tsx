@@ -176,7 +176,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  const photoX=frame?clamp(frame.x+cfg.imageDX,margin+pad,w-margin-pad-frame.w):0;
  const photoY=cfg.imageDY;
  const titleFont=font,lh=titleFont*cfg.lineSpacing;
- const dy=cfg.headlineDY+(topPhoto?photoH+cfg.detailSpacing:0);
+ const dy=topPhoto?Math.max(cfg.headlineDY+photoH+cfg.detailSpacing,photoY+photoH+creditH+20):cfg.headlineDY;
  const words=cfg.title.trim().match(/\S+/g)??[];
  const rows:HeadlineRow[]=[];
  const spare=Math.abs(cfg.headlineDX)+cfg.headlineInset;
@@ -222,7 +222,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  let next=mediaBottom+(summaryLines.length||source?cfg.detailSpacing:0);
  let sourceY:number|null=null,summaryY=0;
  if(source&&cfg.sourcePlacement==='before-summary'){
-  sourceY=next+Math.max(-12,cfg.sourceDY);next+=sourceH+12;
+  sourceY=next+Math.max(-12,cfg.sourceDY);next=Math.max(next,sourceY)+sourceH+12;
  }
  if(summaryLines.length){summaryY=next+Math.max(-12,cfg.summaryDY);next=Math.max(next,summaryY)+summaryH}
  if(source&&cfg.sourcePlacement==='after-summary'){
@@ -332,7 +332,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   }
   if(news.source&&news.sourceY!==null){
    ctx.direction='rtl';ctx.textAlign='right';ctx.font='500 25px '+serif;ctx.fillStyle=c.accent;
-   ctx.fillText(ellipsis(ctx,news.source,w-2*margin-35),news.sourceRight,news.sourceY);
+   ctx.fillText(ellipsis(ctx,news.source,Math.max(120,news.sourceRight-margin-15)),news.sourceRight,news.sourceY);
   }
   if(news.photo&&cfg.newsImage)photoCredit(ctx,cfg,news.photo,news.creditBelowY,c.dim);
  }
@@ -513,7 +513,7 @@ export default function Studio(){
   }catch{setError('تعذر التصدير؛ تحقق من إعدادات تنزيل الملفات المتعددة')}finally{setExporting(false)}
  }
  return <main className="knowledge-page studio-page">
- <header className="knowledge-hero"><span className="eyebrow">استوديو ساس · V2</span><h1>استوديو المنتجات البصرية</h1><p>معاينة وتصدير محلي دون نشر آلي أو تعديل تلقائي للبيان.</p></header>
+ <header className="knowledge-hero"><span className="eyebrow">استوديو ساس · V3-C.3</span><h1>استوديو المنتجات البصرية</h1><p>معاينة وتصدير محلي دون نشر آلي أو تعديل تلقائي للبيان.</p></header>
  <div className="studio-layout"><section className="admin-panel studio-fields">
  <h2>إعداد المادة</h2>
  <label>نوع التصميم<select value={mode} onChange={e=>{const next=e.target.value as Mode;setMode(next);setTextSize(next==='statement'?43:78);setSideMargin(next==='statement'?120:76);setLineSpacing(next==='statement'?1.65:1.45);setPage(0)}}>{(Object.keys(modes) as Mode[]).map(k=><option key={k} value={k}>{modes[k]}</option>)}</select></label>
