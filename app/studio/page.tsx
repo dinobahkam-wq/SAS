@@ -70,7 +70,7 @@ export default function NewsStudio(){
  const [category,setCategory]=useState('خبر');
  const [format,setFormat]=useState<Format>('portrait');
  const [style,setStyle]=useState<Palette>('forest');
- const [date,setDate]=useState(()=>new Intl.DateTimeFormat('en-CA-u-ca-gregory-nu-latn',{timeZone:'Asia/Aden',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','/'));
+ const [date,setDate]=useState(()=>{const parts=new Intl.DateTimeFormat('en-CA-u-ca-gregory-nu-latn',{timeZone:'Asia/Aden',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const part=(type:string)=>parts.find(p=>p.type===type)?.value??'';return [part('year'),part('month'),part('day')].join('/')});
  const [error,setError]=useState('');
  const [working,setWorking]=useState(false);
  const canvas=useRef<HTMLCanvasElement>(null);
@@ -79,13 +79,13 @@ export default function NewsStudio(){
  const [logoReady,setLogoReady]=useState(0);
  useEffect(()=>{let active=true;const timer=setTimeout(()=>{void(async()=>{
   if(!canvas.current)return;
-  try{await document.fonts.ready;const result=await draw(canvas.current,{headline,category,format,style,date,logo:logo.current});if(active)setError(result??'')}
+  try{await Promise.all([document.fonts.load('500 86px "Sas Thmanyah Serif"'),document.fonts.load('700 39px "Sas Thmanyah Sans"')]);const result=await draw(canvas.current,{headline,category,format,style,date,logo:logo.current});if(active)setError(result??'')}
   catch{if(active)setError('تعذر إنشاء المعاينة')}
  })()},160);return()=>{active=false;clearTimeout(timer)}},[headline,category,format,style,date,logoReady]);
  async function download(){
   if(!canvas.current||!headline.trim())return;
   setWorking(true);try{
-   await document.fonts.ready;
+   await Promise.all([document.fonts.load('500 86px "Sas Thmanyah Serif"'),document.fonts.load('700 39px "Sas Thmanyah Sans"')]);
    const problem=await draw(canvas.current,{headline,category,format,style,date,logo:logo.current});
    if(problem){setError(problem);return}
    if(!logo.current){setError('لم يُحمّل الشعار الرسمي. أعد المحاولة بعد اتصال الإنترنت.');return}
