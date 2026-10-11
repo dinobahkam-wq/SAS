@@ -81,7 +81,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const sidePhoto=photographic&&(cfg.photoPosition==='left'||cfg.photoPosition==='right');
  const hasDetail=Boolean(cfg.summary.trim()||cfg.mapImage);
  const mapW=cfg.mapImage?Math.min(180,Math.floor(width*.27)):0;
- const titleWidth=sidePhoto&&photo?width-photo.w-28:width;
+ const titleWidth=sidePhoto&&photo?width-photo.w-40:width;
  const summaryWidth=width-(mapW?mapW+22:0);
  const briefFont=Math.max(20,Math.min(31,Math.round(w*.026)));
  ctx.font='400 '+briefFont+'px '+serif;
@@ -90,13 +90,14 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const detailHeight=hasDetail?cfg.detailSpacing+briefHeight:0;
  const photoHeight=photographic&&photo?(cfg.photoPosition==='top'?photo.h+cfg.detailSpacing:photo.h):0;
  let lines:string[]=[];let fit=false;
+ font=Math.min(font,sidePhoto?Math.max(32,Math.round(w*.052)):Math.max(42,Math.round(w*.065)));
  while(font>=26){
   ctx.font=cfg.textWeight+' '+font+'px '+serif;
   lines=toLines(ctx,cfg.title.trim(),titleWidth);lineHeight=font*cfg.lineSpacing;
   const titleHeight=lines.length*lineHeight;
   const mediaHeight=sidePhoto?Math.max(titleHeight,photoHeight):titleHeight+photoHeight;
   const totalHeight=mediaHeight+detailHeight;
-  if(totalHeight<=bottom-top){fit=true;break}
+  if(totalHeight<=bottom-top-12){fit=true;break}
   font-=2;
  }
  if(!fit)return {...empty,error:'الصورة والنص لا يتسعان لهذا المقاس؛ استخدم مقاسًا أكبر أو خفف حجم الصورة والهوامش'};
@@ -108,7 +109,7 @@ function photoBox(cfg:Config,w:number,h:number,margin:number){
  const scale=cfg.photoScale/100;
  if(cfg.photoPosition==='background')return {x:margin,y:cfg.topPadding+98,w:width,h:Math.max(100,h-cfg.topPadding-cfg.bottomPadding-280)};
  if(cfg.photoPosition==='top')return {x:margin,y:0,w:width,h:Math.max(115,Math.min(280,Math.round(h*.22*scale)))};
- const photoW=Math.round(Math.min(width*.5,width*.38*scale));
+ const photoW=Math.round(Math.min(width*.46,width*.38*scale));
  return {x:cfg.photoPosition==='left'?margin:w-margin-photoW,y:0,w:photoW,h:Math.max(110,Math.min(470,Math.round(h*.36*scale)))};
 }
 function paintPhoto(ctx:CanvasRenderingContext2D,img:HTMLImageElement,box:{x:number;y:number;w:number;h:number},fit:PhotoFit,rounded:boolean,opacity:number){
@@ -194,7 +195,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   ctx.fillStyle=c.fg;ctx.font='700 32px '+serif;ctx.fillText(ellipsis(ctx,cfg.quoteName||'المتحدث',quoteWidth),right,qBottom+25);
   if(cfg.quoteRole){ctx.fillStyle=c.dim;ctx.font='400 24px '+serif;const roles=toLines(ctx,cfg.quoteRole,quoteWidth).slice(0,2);roles.forEach((line,j)=>ctx.fillText(line,right,qBottom+68+j*34))}
  }else{
-  const availableBottom=h-cfg.bottomPadding-168;
+  const availableBottom=h-cfg.bottomPadding-195;
   const photo=photoBox(cfg,w,h,margin);
   const sidePhoto=Boolean(photo&&(cfg.photoPosition==='left'||cfg.photoPosition==='right'));
   const topPhoto=Boolean(photo&&cfg.photoPosition==='top');
@@ -214,10 +215,10 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   const y=cfg.vertical==='top'?top:cfg.vertical==='bottom'?maxY:Math.max(top,Math.floor((top+maxY)/2));
   if(photo&&cfg.newsImage&&cfg.photoPosition==='background'){
    paintPhoto(ctx,cfg.newsImage,photo,cfg.photoFit,cfg.photoRounded,cfg.photoOpacity/100);
-   ctx.fillStyle=c.bg;ctx.globalAlpha=.62;ctx.fillRect(photo.x,photo.y,photo.w,photo.h);ctx.globalAlpha=1;
+   ctx.fillStyle=c.bg;ctx.globalAlpha=.78;ctx.fillRect(photo.x,photo.y,photo.w,photo.h);ctx.globalAlpha=1;
   }
-  const titleRight=sidePhoto&&photo&&cfg.photoPosition==='right'?w-margin-photo.w-28:w-margin;
-  const titleLeft=sidePhoto&&photo&&cfg.photoPosition==='left'?margin+photo.w+28:margin;
+  const titleRight=sidePhoto&&photo&&cfg.photoPosition==='right'?w-margin-photo.w-40:w-margin;
+  const titleLeft=sidePhoto&&photo&&cfg.photoPosition==='left'?margin+photo.w+40:margin;
   const titleX=cfg.align==='center'?(titleLeft+titleRight)/2:titleRight;
   const titleY=topPhoto&&photo?y+photo.h+cfg.detailSpacing:y;
   if(photo&&cfg.newsImage&&cfg.photoPosition!=='background'){
@@ -225,7 +226,8 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
    paintPhoto(ctx,cfg.newsImage,box,cfg.photoFit,cfg.photoRounded,1);
   }
   ctx.fillStyle=c.fg;ctx.font=cfg.textWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;ctx.direction='rtl';
-  p.lines.forEach((line,j)=>drawText(ctx,line,titleX,titleY+j*lineHeight,cfg.underline));ctx.textAlign='right';
+  ctx.save();ctx.beginPath();ctx.rect(titleLeft-3,titleY-3,titleRight-titleLeft+6,titleHeight+12);ctx.clip();
+  p.lines.forEach((line,j)=>drawText(ctx,line,titleX,titleY+j*lineHeight,cfg.underline));ctx.restore();ctx.textAlign='right';
   if(hasDetail){
    const detailY=y+mediaHeight+cfg.detailSpacing;
    ctx.strokeStyle=c.accent;ctx.globalAlpha=.45;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(margin,detailY-12);ctx.lineTo(w-margin,detailY-12);ctx.stroke();ctx.globalAlpha=1;
