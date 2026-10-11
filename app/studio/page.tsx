@@ -116,7 +116,7 @@ function paintPhoto(ctx:CanvasRenderingContext2D,img:HTMLImageElement,box:{x:num
  if(w<=0||h<=0)return;
  ctx.save();
  ctx.globalAlpha=opacity;
- if(rounded){ctx.beginPath();ctx.roundRect(x,y,w,h,18);ctx.clip()}
+ ctx.beginPath();ctx.roundRect(x,y,w,h,rounded?18:0);ctx.clip()
  ctx.fillStyle='#faf9f3';ctx.fillRect(x,y,w,h);
  const factor=fit==='cover'?Math.max(w/img.width,h/img.height):Math.min(w/img.width,h/img.height);
  const iw=img.width*factor,ih=img.height*factor;
@@ -216,14 +216,13 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
    paintPhoto(ctx,cfg.newsImage,photo,cfg.photoFit,cfg.photoRounded,cfg.photoOpacity/100);
    ctx.fillStyle=c.bg;ctx.globalAlpha=.62;ctx.fillRect(photo.x,photo.y,photo.w,photo.h);ctx.globalAlpha=1;
   }
-  const textWidth=w-margin*2-(sidePhoto&&photo?photo.w+28:0);
   const titleRight=sidePhoto&&photo&&cfg.photoPosition==='right'?w-margin-photo.w-28:w-margin;
   const titleLeft=sidePhoto&&photo&&cfg.photoPosition==='left'?margin+photo.w+28:margin;
   const titleX=cfg.align==='center'?(titleLeft+titleRight)/2:titleRight;
   const titleY=topPhoto&&photo?y+photo.h+cfg.detailSpacing:y;
   if(photo&&cfg.newsImage&&cfg.photoPosition!=='background'){
    const box=topPhoto?{...photo,y}:sidePhoto?{...photo,y}:photo;
-   paintPhoto(ctx,cfg.newsImage,box,cfg.photoFit,cfg.photoRounded,100);
+   paintPhoto(ctx,cfg.newsImage,box,cfg.photoFit,cfg.photoRounded,1);
   }
   ctx.fillStyle=c.fg;ctx.font=cfg.textWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;ctx.direction='rtl';
   p.lines.forEach((line,j)=>drawText(ctx,line,titleX,titleY+j*lineHeight,cfg.underline));ctx.textAlign='right';
