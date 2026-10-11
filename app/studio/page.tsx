@@ -79,9 +79,9 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
  if(cfg.mode==='statement'){
   ctx.fillStyle=c.fg;ctx.font='500 51px '+serif;
   const titleLines=toLines(ctx,cfg.title,w-152);
-  if(titleLines.length>2)return {total:pages.length,error:'عنوان البيان طويل؛ اجعله في سطرين كحد أقصى'};
+  if(titleLines.length>1)return {total:pages.length,error:'عنوان البيان أطول من المساحة المحددة؛ اختصر العنوان إلى سطر واحد، وضع النص الكامل في المتن'};
   titleLines.forEach((line,j)=>ctx.fillText(line,w-76,170+j*70));
-  ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.fillText(cfg.issuer||'الجهة المصدرة غير محددة',w-76,284);
+  ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.fillText(cfg.issuer||'الجهة المصدرة غير محددة',w-76,266);
   ctx.fillStyle=c.fg;ctx.font='400 '+font+'px '+sans;
   p.lines.forEach((line,j)=>{if(line)ctx.fillText(line,w-76,326+j*lineHeight)});
  }else{
