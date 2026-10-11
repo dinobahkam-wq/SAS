@@ -187,3 +187,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .studio-taxonomy{border:1px solid #d8e1e2;border-radius:12px;display:grid;gap:12px;padding:14px;margin:0}.studio-taxonomy legend{font-weight:700;padding:0 8px;color:#263f39}.studio-taxonomy label{font-weight:500}.studio-fields input[type=file]{padding:9px;max-width:100%}
 
 .studio-options{border:1px solid #dae3e0;padding:12px;border-radius:12px;display:grid;gap:10px}.studio-options legend{padding:0 8px;font-weight:700}.studio-colors{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.studio-colors button{height:44px;border:2px solid transparent;border-radius:9px}.studio-colors button[aria-pressed=true]{outline:2px solid #3c6c57;outline-offset:2px}.studio-taxonomy select{min-width:0;width:100%}
+
+.studio-options label:has(input[type=checkbox]){display:flex;align-items:center;gap:9px}.studio-options input[type=checkbox]{width:18px;height:18px;flex:none}.studio-options input[type=range]{padding:0;accent-color:#396a53}
