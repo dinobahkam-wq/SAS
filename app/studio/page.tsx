@@ -3,6 +3,8 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 type Format='square'|'portrait'|'landscape';
 type Skin='forest'|'ink'|'ivory'|'navy'|'olive'|'stone'|'rose';
 type Mode='news'|'urgent'|'statement';
+type Align='right'|'center';
+type Weight=300|400|500|700;
 type Page={lines:string[]};
 type KnowledgePath={dossier:string;issue:string;event:string};
 type Entry={slug:string;title_ar:string;summary_ar:string|null;starts_at:string|null};
@@ -10,7 +12,7 @@ type Related={slug:string;title:string;kind:'dossiers'|'issues'|'events'};
 const sizes:Record<Format,{w:number;h:number;label:string}>={square:{w:1080,h:1080,label:'مربع 1080 × 1080'},portrait:{w:1080,h:1350,label:'عمودي 1080 × 1350'},landscape:{w:1200,h:675,label:'أفقي 1200 × 675'}};
 const skins:Record<Skin,{bg:string,fg:string,accent:string,dim:string}>={forest:{bg:'#092d28',fg:'#fffefa',accent:'#d6ee91',dim:'#d3e3dc'},ink:{bg:'#182730',fg:'#ffffff',accent:'#e8b5a8',dim:'#cbd4d8'},ivory:{bg:'#faf9f3',fg:'#183833',accent:'#396a53',dim:'#526860'},navy:{bg:'#142a42',fg:'#fffdf6',accent:'#b7d3ee',dim:'#cdd9e3'},olive:{bg:'#333d27',fg:'#fffefa',accent:'#d8dd9b',dim:'#e2e4d0'},stone:{bg:'#eeeae1',fg:'#29322c',accent:'#758778',dim:'#505d52'},rose:{bg:'#f6e9e4',fg:'#412e33',accent:'#a85b6d',dim:'#775c63'}};
 const modes:Record<Mode,string>={news:'خبر',urgent:'عاجل',statement:'بيان رسمي'};
-type Config={mode:Mode;format:Format;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string};
+type Config={mode:Mode;format:Format;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string;sourceName:string;showSource:boolean;textSize:number;textWeight:Weight;align:Align;underline:boolean;sideMargin:number;lineSpacing:number;vertical:'top'|'center'|'bottom'};
 const serif='"Sas Thmanyah Serif","Sas Thmanyah Sans",sans-serif';
 const sans=serif;
 function toLines(ctx:CanvasRenderingContext2D,text:string,maxWidth:number):string[]{
@@ -32,7 +34,7 @@ function toLines(ctx:CanvasRenderingContext2D,text:string,maxWidth:number):strin
  return output;
 }
 function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number;lineHeight:number;error:string;top:number;heading:string[];taxonomy:string[]}{
- const {w,h}=sizes[cfg.format];const statement=cfg.mode==='statement';const margin=statement?120:76;const width=w-margin*2;const empty={pages:[] as Page[],font:0,lineHeight:0,error:'',top:0,heading:[] as string[],taxonomy:[] as string[]};
+ const {w,h}=sizes[cfg.format];const statement=cfg.mode==='statement';const margin=cfg.sideMargin;const width=w-margin*2;const empty={pages:[] as Page[],font:0,lineHeight:0,error:'',top:0,heading:[] as string[],taxonomy:[] as string[]};
  if(statement&&cfg.format==='landscape')return {...empty,error:'استخدم المقاس المربع أو العمودي للبيان الرسمي'};
  if(!cfg.title.trim()||(statement&&!cfg.body.trim()))return {...empty,error:'أدخل العنوان والنص المطلوب'};
  if(/https?:\/\/|www\./i.test(cfg.title))return {...empty,error:'العنوان يحتوي على رابط إلكتروني. انقل الرابط إلى حقل المصدر، واترك العنوان نصًا خبريًا فقط.'};
@@ -49,8 +51,8 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const titleBottom=headerStart+heading.length*(cfg.titleSize*1.32);
  const top=statement?titleBottom+issuerArea+(cfg.issuerLogo?0:25):Math.max(205,taxBottom+35);
  const bottom=h-176;
- let font=statement?(cfg.format==='square'?35:43):(cfg.format==='landscape'?73:86);
- let lineHeight=font*(statement?1.65:1.45);
+ let font=cfg.textSize;
+ let lineHeight=font*cfg.lineSpacing;
  if(bottom-top<lineHeight*2)return {...empty,error:'المساحة لا تكفي للنص والتصنيف؛ اختر مقاسًا أطول أو اختصر مسار التصنيف'};
  if(statement){
    ctx.font=cfg.bodyWeight+' '+font+'px '+serif;
@@ -63,7 +65,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  }
  let lines:string[]=[];
  while(font>=38){
-   ctx.font='700 '+font+'px '+serif;lines=toLines(ctx,cfg.title.trim(),width);lineHeight=font*1.45;
+   ctx.font=cfg.textWeight+' '+font+'px '+serif;lines=toLines(ctx,cfg.title.trim(),width);lineHeight=font*cfg.lineSpacing;
    if(lines.length*lineHeight<=bottom-top)break;
    font-=2;
  }
@@ -84,11 +86,15 @@ function ellipsis(ctx:CanvasRenderingContext2D,value:string,maxWidth:number):str
  while(low<high){const middle=Math.ceil((low+high)/2);if(ctx.measureText(characters.slice(0,middle).join('')+'…').width<=maxWidth)low=middle;else high=middle-1}
  return characters.slice(0,low).join('')+'…';
 }
+function drawText(ctx:CanvasRenderingContext2D,line:string,x:number,y:number,underlined:boolean){
+ ctx.fillText(line,x,y);
+ if(underlined&&line){const width=ctx.measureText(line).width;const from=ctx.textAlign==='center'?x-width/2:x-width;ctx.beginPath();ctx.moveTo(from,y+Number.parseInt(ctx.font.match(/(\d+)px/)?.[1]??'40',10)*1.09);ctx.lineTo(from+width,y+Number.parseInt(ctx.font.match(/(\d+)px/)?.[1]??'40',10)*1.09);ctx.lineWidth=2;ctx.strokeStyle=ctx.fillStyle as string;ctx.stroke()}
+}
 function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;error:string}{
  const {w,h}=sizes[cfg.format];canvas.width=w;canvas.height=h;
  const ctx=canvas.getContext('2d');if(!ctx)return {total:0,error:'تعذر فتح محرك الرسم'};
  const {pages,font,lineHeight,error,top,heading,taxonomy}=plan(cfg,ctx);
- const margin=cfg.mode==='statement'?120:76;
+ const margin=cfg.sideMargin;
  if(error)return {total:0,error};
  const p=pages[Math.min(index,pages.length-1)];const c=skins[cfg.skin];
  ctx.fillStyle=c.bg;ctx.fillRect(0,0,w,h);
@@ -120,12 +126,15 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   const issuerLines=toLines(ctx,cfg.issuer||'الجهة المصدرة غير محددة',w-margin*2);
   if(issuerLines.length>2)return {total:pages.length,error:'اسم الجهة طويل؛ اختصر الاسم'};
   issuerLines.forEach((line,j)=>ctx.fillText(line,w-margin,issuerY+j*38));
-  ctx.fillStyle=c.fg;ctx.font=cfg.bodyWeight+' '+font+'px '+serif;
-  p.lines.forEach((line,j)=>{if(line)ctx.fillText(line,w-margin,top+j*lineHeight)});
+  ctx.fillStyle=c.fg;ctx.font=cfg.bodyWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;
+  const x=cfg.align==='center'?w/2:w-margin;
+  p.lines.forEach((line,j)=>{if(line)drawText(ctx,line,x,top+j*lineHeight,cfg.underline)});ctx.textAlign='right';
  }else{
-  ctx.fillStyle=c.fg;ctx.font='700 '+font+'px '+serif;
-  const y=Math.max(top,Math.floor((h-p.lines.length*lineHeight)/2));
-  p.lines.forEach((line,j)=>ctx.fillText(line,w-76,y+j*lineHeight));
+  ctx.fillStyle=c.fg;ctx.font=cfg.textWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;
+  const maxY=h-176-p.lines.length*lineHeight;
+  const y=cfg.vertical==='top'?top:cfg.vertical==='bottom'?maxY:Math.max(top,Math.floor((top+maxY)/2));
+  const x=cfg.align==='center'?w/2:w-margin;
+  p.lines.forEach((line,j)=>drawText(ctx,line,x,y+j*lineHeight,cfg.underline));ctx.textAlign='right';
  }
  const foot=h-162;
  ctx.strokeStyle=c.accent;ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(72,foot);ctx.lineTo(w-76,foot);ctx.stroke();ctx.globalAlpha=1;
@@ -139,14 +148,14 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
  }else{
   ctx.fillStyle='#183833';ctx.font='700 30px '+sans;ctx.textAlign='center';ctx.fillText('ساس',badgeX+badgeW/2,badgeY+42);ctx.textAlign='right';
  }
- ctx.direction='ltr';ctx.textAlign='left';ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.fillText(cfg.date,72,foot+53);
- if(cfg.mode==='statement'){ctx.fillText(String(index+1)+' / '+String(pages.length),72,foot+89)}
- const source=sourceLabel(cfg.sourceUrl);
- if(source){
-  ctx.direction='ltr';ctx.textAlign='left';ctx.fillStyle=c.dim;ctx.font='400 20px '+serif;
-  const available=badgeX-72-22;
-  const label=ellipsis(ctx,'المصدر: '+source,available);
-  ctx.fillText(label,72,cfg.mode==='statement'?foot+119:foot+95);
+ ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.direction='ltr';ctx.textAlign='left';
+ ctx.fillText(cfg.date,72,foot+92);
+ if(cfg.mode==='statement')ctx.fillText(String(index+1)+' / '+String(pages.length),72,foot+120);
+ const name=cfg.sourceName.trim()||sourceLabel(cfg.sourceUrl);
+ if(cfg.showSource&&name){
+  ctx.textAlign='right';ctx.direction='rtl';ctx.font='500 25px '+serif;
+  const available=badgeX-72-32;
+  ctx.fillText(ellipsis(ctx,'المصدر: '+name,available),badgeX-30,foot+31);
  }
  return {total:pages.length,error:''};
 }
@@ -165,6 +174,15 @@ export default function Studio(){
  const [directoryError,setDirectoryError]=useState('');
  const [title,setTitle]=useState('');
  const [sourceUrl,setSourceUrl]=useState('');
+ const [sourceName,setSourceName]=useState('');
+ const [showSource,setShowSource]=useState(true);
+ const [textSize,setTextSize]=useState(70);
+ const [textWeight,setTextWeight]=useState<Weight>(700);
+ const [align,setAlign]=useState<Align>('right');
+ const [underline,setUnderline]=useState(false);
+ const [sideMargin,setSideMargin]=useState(76);
+ const [lineSpacing,setLineSpacing]=useState(1.45);
+ const [vertical,setVertical]=useState<'top'|'center'|'bottom'>('center');
  const [body,setBody]=useState('');
  const [issuer,setIssuer]=useState('');
  const [issuerLogo,setIssuerLogo]=useState<HTMLImageElement|null>(null);
@@ -174,7 +192,7 @@ export default function Studio(){
  const [page,setPage]=useState(0);const [count,setCount]=useState(0);
  const [error,setError]=useState('');const [logo,setLogo]=useState<HTMLImageElement|null>(null);
  const [exporting,setExporting]=useState(false);const canvas=useRef<HTMLCanvasElement>(null);
- const cfg=useMemo(()=>({mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl}),[mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl]);
+ const cfg=useMemo(()=>({mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical}),[mode,format,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical]);
  useEffect(()=>{let live=true;const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key){setDirectoryError('لم يكتمل اتصال Supabase');return}
  const rpc=async<T,>(name:string,args:object):Promise<T>=>{const response=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!response.ok)throw new Error('تعذر تحميل التصنيفات');return await response.json() as T};
  void Promise.all((['dossiers','issues','events'] as const).map(async kind=>[kind,await rpc<Entry[]>('sas_public_directory',{p_kind:kind})] as const)).then(items=>{if(live)setDirectory(Object.fromEntries(items) as Record<'dossiers'|'issues'|'events',Entry[]>)}).catch(()=>{if(live)setDirectoryError('تعذر تحميل قوائم ساس')});
@@ -225,8 +243,9 @@ export default function Studio(){
  <h2>إعداد المادة</h2>
  <label>نوع التصميم<select value={mode} onChange={e=>{setMode(e.target.value as Mode);setPage(0)}}>{(Object.keys(modes) as Mode[]).map(k=><option key={k} value={k}>{modes[k]}</option>)}</select></label>
  <label>{mode==='statement'?'عنوان البيان (حتى 120 حرفًا)':'نص الخبر'}<textarea rows={3} maxLength={mode==='statement'?120:900} value={title} onChange={e=>{setTitle(e.target.value);setPage(0)}}/></label>
- <label>رابط المصدر (اختياري — يظهر مختصرًا أسفل الصورة)<input dir="ltr" type="url" placeholder="https://..." value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)}/></label>
- {sourceUrl&&<p className="studio-note">سيظهر اسم نطاق المصدر ومساره بصورة مختصرة أسفل التاريخ؛ يبقى الرابط الكامل في هذا الحقل.</p>}
+ <label>اسم المصدر (اختياري)<input value={sourceName} maxLength={120} placeholder="وكيل حضرموت الإخباري" onChange={e=>setSourceName(e.target.value)}/></label>
+ <label>رابط المصدر (اختياري)<input dir="ltr" type="url" placeholder="https://..." value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)}/></label>
+ {(sourceUrl||sourceName)&&<p className="studio-note">سيظهر اسم المصدر أعلى تاريخ البطاقة في منطقة مستقلة. يُستخرج الاسم من الرابط إذا تركت حقل الاسم فارغًا.</p>}
  {mode==='statement'&&<><label>الجهة المصدرة<input value={issuer} maxLength={160} onChange={e=>setIssuer(e.target.value)}/></label>
  <label>شعار الجهة (اختياري · PNG/JPEG/WebP · 5MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void setIssuerImage(e.target.files?.[0])}/></label>
  {issuerLogo&&<button type="button" onClick={()=>{setIssuerLogo(null);setIssuerLogoError('')}}>حذف شعار الجهة</button>}
@@ -240,6 +259,17 @@ export default function Studio(){
  <label>المقاس<select value={format} onChange={e=>{setFormat(e.target.value as Format);setPage(0)}}>{(Object.keys(sizes) as Format[]).map(k=><option key={k} value={k}>{sizes[k].label}</option>)}</select></label>
  <label>لوحة الألوان<select value={skin} onChange={e=>setSkin(e.target.value as Skin)}><option value="forest">أخضر عميق</option><option value="ink">حبر داكن</option><option value="ivory">عاجي</option><option value="navy">كحلي مؤسسي</option><option value="olive">زيتوني</option><option value="stone">رمادي دافئ</option><option value="rose">وردي ترابي</option></select></label>
  <fieldset className="studio-options"><legend>تخصيصات التصميم</legend><label><input type="checkbox" checked={showPath} onChange={e=>setShowPath(e.target.checked)}/> إظهار مسار التصنيف</label>{mode==='statement'&&<><label>وزن متن البيان<select value={bodyWeight} onChange={e=>setBodyWeight(Number(e.target.value) as 300|400)}><option value={300}>Light — خفيف</option><option value={400}>Regular — عادي</option></select></label><label>حجم عنوان البيان: {titleSize}px<input type="range" min={52} max={74} step={2} value={titleSize} onChange={e=>setTitleSize(Number(e.target.value))}/></label></>}</fieldset>
+ <fieldset className="studio-options"><legend>تنسيق النص والإطار غير المرئي</legend>
+ <label>حجم النص الرئيسي: {mode==='statement'?textSize:textSize} بكسل<input type="range" min={32} max={104} step={2} value={textSize} onChange={e=>setTextSize(Number(e.target.value))}/></label>
+ <label>سماكة نص الخبر<select value={textWeight} onChange={e=>setTextWeight(Number(e.target.value) as Weight)}><option value={300}>خفيف</option><option value={400}>عادي</option><option value={500}>متوسط</option><option value={700}>عريض</option></select></label>
+ <label>المحاذاة<select value={align} onChange={e=>setAlign(e.target.value as Align)}><option value="right">يمين</option><option value="center">توسيط</option></select></label>
+ <label>موضع النص<select value={vertical} onChange={e=>setVertical(e.target.value as 'top'|'center'|'bottom')}><option value="top">أعلى الإطار</option><option value="center">وسط الإطار</option><option value="bottom">أسفل الإطار</option></select></label>
+ <label>الهامش الجانبي: {sideMargin} بكسل<input type="range" min={64} max={185} step={1} value={sideMargin} onChange={e=>setSideMargin(Number(e.target.value))}/></label>
+ <label>ارتفاع السطر: {lineSpacing.toFixed(2)}<input type="range" min={1.2} max={1.95} step={0.05} value={lineSpacing} onChange={e=>setLineSpacing(Number(e.target.value))}/></label>
+ <label><input type="checkbox" checked={underline} onChange={e=>setUnderline(e.target.checked)}/> تسطير النص الرئيسي</label>
+ <label><input type="checkbox" checked={showSource} onChange={e=>setShowSource(e.target.checked)}/> إظهار اسم المصدر</label>
+ <small>تكييف النص داخل الإطار بالالتفاف والتصغير عند الحاجة. الكشيدة والضبط الكامل يحتاجان خوارزمية تشكيل عربية مستقلة، ولذلك لم يُفعّلا بعد.</small>
+ </fieldset>
  <label>التاريخ<input dir="ltr" value={date} onChange={e=>setDate(e.target.value)} pattern="[0-9]{4}/[0-9]{2}/[0-9]{2}"/></label>
  {error&&<p role="alert" className="admin-feedback">{error}</p>}
  <button type="button" onClick={()=>void exportPages()} disabled={exporting||!!error||!count||!logo}>{exporting?'جارٍ التصدير…':count>1?'تصدير جميع الصفحات PNG':'تصدير PNG'}</button>
