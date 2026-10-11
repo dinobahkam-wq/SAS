@@ -5,6 +5,8 @@ type Skin='forest'|'ink'|'ivory'|'navy'|'olive'|'stone'|'rose';
 type Mode='news'|'urgent'|'statement'|'quote';
 type Align='right'|'center';
 type Weight=300|400|500|700;
+type PhotoPosition='left'|'right'|'top'|'background';
+type PhotoFit='cover'|'contain';
 type Page={lines:string[]};
 type KnowledgePath={dossier:string;issue:string;event:string};
 type Entry={slug:string;title_ar:string;summary_ar:string|null;starts_at:string|null};
@@ -12,7 +14,7 @@ type Related={slug:string;title:string;kind:'dossiers'|'issues'|'events'};
 const sizes:Record<Format,{w:number;h:number;label:string}>={square:{w:1080,h:1080,label:'مربع 1080 × 1080'},portrait:{w:1080,h:1350,label:'عمودي 1080 × 1350'},landscape:{w:1200,h:675,label:'أفقي 1200 × 675'},wide:{w:1600,h:900,label:'عريض 1600 × 900'},story:{w:1080,h:1920,label:'ستوري 1080 × 1920'},custom:{w:1080,h:1350,label:'مقاس مخصص'}};
 const skins:Record<Skin,{bg:string,fg:string,accent:string,dim:string}>={forest:{bg:'#092d28',fg:'#fffefa',accent:'#d6ee91',dim:'#d3e3dc'},ink:{bg:'#182730',fg:'#ffffff',accent:'#e8b5a8',dim:'#cbd4d8'},ivory:{bg:'#faf9f3',fg:'#183833',accent:'#396a53',dim:'#526860'},navy:{bg:'#142a42',fg:'#fffdf6',accent:'#b7d3ee',dim:'#cdd9e3'},olive:{bg:'#333d27',fg:'#fffefa',accent:'#d8dd9b',dim:'#e2e4d0'},stone:{bg:'#eeeae1',fg:'#29322c',accent:'#758778',dim:'#505d52'},rose:{bg:'#f6e9e4',fg:'#412e33',accent:'#a85b6d',dim:'#775c63'}};
 const modes:Record<Mode,string>={news:'خبر',urgent:'عاجل',statement:'بيان رسمي',quote:'تصريح / اقتباس'};
-type Config={mode:Mode;format:Format;customWidth:number;customHeight:number;topPadding:number;bottomPadding:number;detailSpacing:number;summaryLineSpacing:number;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string;sourceName:string;showSource:boolean;textSize:number;textWeight:Weight;align:Align;underline:boolean;sideMargin:number;lineSpacing:number;vertical:'top'|'center'|'bottom';summary:string;location:string;showLocation:boolean;quoteName:string;quoteRole:string;personImage:HTMLImageElement|null;mapImage:HTMLImageElement|null};
+type Config={mode:Mode;format:Format;customWidth:number;customHeight:number;topPadding:number;bottomPadding:number;detailSpacing:number;summaryLineSpacing:number;skin:Skin;title:string;body:string;issuer:string;date:string;logo:HTMLImageElement|null;issuerLogo:HTMLImageElement|null;path:KnowledgePath;bodyWeight:300|400;titleSize:number;showPath:boolean;sourceUrl:string;sourceName:string;showSource:boolean;textSize:number;textWeight:Weight;align:Align;underline:boolean;sideMargin:number;lineSpacing:number;vertical:'top'|'center'|'bottom';summary:string;location:string;showLocation:boolean;quoteName:string;quoteRole:string;personImage:HTMLImageElement|null;mapImage:HTMLImageElement|null;newsImage:HTMLImageElement|null;photoPosition:PhotoPosition;photoFit:PhotoFit;photoScale:number;photoOpacity:number;photoRounded:boolean};
 function dimensions(cfg:Config){return cfg.format==='custom'?{w:cfg.customWidth,h:cfg.customHeight}:sizes[cfg.format]}
 const serif='"Sas Thmanyah Serif","Sas Thmanyah Sans",sans-serif';
 const sans=serif;
@@ -73,27 +75,53 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
   if(lines.length*lineHeight>bottom-top-90)return {...empty,error:'الاقتباس طويل جدًا؛ اختصره ليناسب البطاقة'};
   return {pages:[{lines}],font,lineHeight,error:'',top,heading,taxonomy};
  }
- // News: measure title, summary, optional map and spacing together before choosing font.
+ // News V3-C: determine media, title and summary sizes against one common budget.
+ const photo=photoBox(cfg,w,h,margin);
+ const photographic=Boolean(photo&&cfg.photoPosition!=='background');
+ const sidePhoto=photographic&&(cfg.photoPosition==='left'||cfg.photoPosition==='right');
  const hasDetail=Boolean(cfg.summary.trim()||cfg.mapImage);
- const detailTopGap=hasDetail?cfg.detailSpacing:0;
  const mapW=cfg.mapImage?Math.min(180,Math.floor(width*.27)):0;
- const summaryW=width-(mapW?mapW+22:0);
- const summaryFont=Math.max(20,Math.min(31,Math.round(w*.026)));
- ctx.font='400 '+summaryFont+'px '+serif;
- const brief=cfg.summary.trim()?toLines(ctx,cfg.summary.trim(),summaryW):[];
- const briefLine=summaryFont*cfg.summaryLineSpacing;
- const mapHeight=cfg.mapImage?Math.min(142,Math.round(w*.125)):0;
- const detailH=hasDetail?Math.max(brief.length*briefLine,mapHeight):0;
- if(detailH>0&&detailH+detailTopGap>bottom-top-50)return {...empty,error:'التفصيل أو الخريطة أطول من المساحة المتاحة؛ زد الارتفاع أو قلل حجم الموجز'};
+ const titleWidth=sidePhoto&&photo?width-photo.w-28:width;
+ const summaryWidth=width-(mapW?mapW+22:0);
+ const briefFont=Math.max(20,Math.min(31,Math.round(w*.026)));
+ ctx.font='400 '+briefFont+'px '+serif;
+ const brief=cfg.summary.trim()?toLines(ctx,cfg.summary.trim(),summaryWidth):[];
+ const briefHeight=Math.max(brief.length*briefFont*cfg.summaryLineSpacing,cfg.mapImage?Math.min(142,Math.round(w*.125)):0);
+ const detailHeight=hasDetail?cfg.detailSpacing+briefHeight:0;
+ const photoHeight=photographic&&photo?(cfg.photoPosition==='top'?photo.h+cfg.detailSpacing:photo.h):0;
  let lines:string[]=[];let fit=false;
  while(font>=26){
   ctx.font=cfg.textWeight+' '+font+'px '+serif;
-  lines=toLines(ctx,cfg.title.trim(),width);lineHeight=font*cfg.lineSpacing;
-  if(lines.length*lineHeight+detailTopGap+detailH<=bottom-top){fit=true;break}
+  lines=toLines(ctx,cfg.title.trim(),titleWidth);lineHeight=font*cfg.lineSpacing;
+  const titleHeight=lines.length*lineHeight;
+  const mediaHeight=sidePhoto?Math.max(titleHeight,photoHeight):titleHeight+photoHeight;
+  const totalHeight=mediaHeight+detailHeight;
+  if(totalHeight<=bottom-top){fit=true;break}
   font-=2;
  }
- if(!fit)return {...empty,error:'العنوان والموجز لا يتسعان لهذا المقاس؛ زد الارتفاع أو خفف الهوامش وحجم الخط'};
+ if(!fit)return {...empty,error:'الصورة والنص لا يتسعان لهذا المقاس؛ استخدم مقاسًا أكبر أو خفف حجم الصورة والهوامش'};
  return {pages:[{lines}],font,lineHeight,error:'',top,heading,taxonomy};
+}
+function photoBox(cfg:Config,w:number,h:number,margin:number){
+ if(!cfg.newsImage)return null;
+ const width=w-2*margin;
+ const scale=cfg.photoScale/100;
+ if(cfg.photoPosition==='background')return {x:margin,y:cfg.topPadding+98,w:width,h:Math.max(100,h-cfg.topPadding-cfg.bottomPadding-280)};
+ if(cfg.photoPosition==='top')return {x:margin,y:0,w:width,h:Math.max(115,Math.min(280,Math.round(h*.22*scale)))};
+ const photoW=Math.round(Math.min(width*.5,width*.38*scale));
+ return {x:cfg.photoPosition==='left'?margin:w-margin-photoW,y:0,w:photoW,h:Math.max(110,Math.min(470,Math.round(h*.36*scale)))};
+}
+function paintPhoto(ctx:CanvasRenderingContext2D,img:HTMLImageElement,box:{x:number;y:number;w:number;h:number},fit:PhotoFit,rounded:boolean,opacity:number){
+ const {x,y,w,h}=box;
+ if(w<=0||h<=0)return;
+ ctx.save();
+ ctx.globalAlpha=opacity;
+ if(rounded){ctx.beginPath();ctx.roundRect(x,y,w,h,18);ctx.clip()}
+ ctx.fillStyle='#faf9f3';ctx.fillRect(x,y,w,h);
+ const factor=fit==='cover'?Math.max(w/img.width,h/img.height):Math.min(w/img.width,h/img.height);
+ const iw=img.width*factor,ih=img.height*factor;
+ ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);
+ ctx.restore();
 }
 function sourceLabel(raw:string):string{
  if(!raw.trim())return '';
@@ -166,8 +194,10 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   ctx.fillStyle=c.fg;ctx.font='700 32px '+serif;ctx.fillText(ellipsis(ctx,cfg.quoteName||'المتحدث',quoteWidth),right,qBottom+25);
   if(cfg.quoteRole){ctx.fillStyle=c.dim;ctx.font='400 24px '+serif;const roles=toLines(ctx,cfg.quoteRole,quoteWidth).slice(0,2);roles.forEach((line,j)=>ctx.fillText(line,right,qBottom+68+j*34))}
  }else{
-  ctx.fillStyle=c.fg;ctx.font=cfg.textWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;
   const availableBottom=h-cfg.bottomPadding-168;
+  const photo=photoBox(cfg,w,h,margin);
+  const sidePhoto=Boolean(photo&&(cfg.photoPosition==='left'||cfg.photoPosition==='right'));
+  const topPhoto=Boolean(photo&&cfg.photoPosition==='top');
   const hasDetail=Boolean(cfg.summary.trim()||cfg.mapImage);
   const mapW=cfg.mapImage?Math.min(180,Math.floor((w-margin*2)*.27)):0;
   const briefWidth=w-margin*2-(mapW?mapW+22:0);
@@ -177,23 +207,34 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   const briefLine=summaryFont*cfg.summaryLineSpacing;
   const mapHeight=cfg.mapImage?Math.min(142,Math.round(w*.125)):0;
   const detailHeight=hasDetail?Math.max(brief.length*briefLine,mapHeight):0;
-  const totalHeight=p.lines.length*lineHeight+(hasDetail?cfg.detailSpacing+detailHeight:0);
+  const titleHeight=p.lines.length*lineHeight;
+  const mediaHeight=sidePhoto&&photo?Math.max(titleHeight,photo.h):topPhoto&&photo?titleHeight+photo.h+cfg.detailSpacing:titleHeight;
+  const totalHeight=mediaHeight+(hasDetail?cfg.detailSpacing+detailHeight:0);
   const maxY=availableBottom-totalHeight;
   const y=cfg.vertical==='top'?top:cfg.vertical==='bottom'?maxY:Math.max(top,Math.floor((top+maxY)/2));
-  const x=cfg.align==='center'?w/2:w-margin;
-  ctx.font=cfg.textWeight+' '+font+'px '+serif;
-  p.lines.forEach((line,j)=>drawText(ctx,line,x,y+j*lineHeight,cfg.underline));ctx.textAlign='right';
+  if(photo&&cfg.newsImage&&cfg.photoPosition==='background'){
+   paintPhoto(ctx,cfg.newsImage,photo,cfg.photoFit,cfg.photoRounded,cfg.photoOpacity/100);
+   ctx.fillStyle=c.bg;ctx.globalAlpha=.62;ctx.fillRect(photo.x,photo.y,photo.w,photo.h);ctx.globalAlpha=1;
+  }
+  const textWidth=w-margin*2-(sidePhoto&&photo?photo.w+28:0);
+  const titleRight=sidePhoto&&photo&&cfg.photoPosition==='right'?w-margin-photo.w-28:w-margin;
+  const titleLeft=sidePhoto&&photo&&cfg.photoPosition==='left'?margin+photo.w+28:margin;
+  const titleX=cfg.align==='center'?(titleLeft+titleRight)/2:titleRight;
+  const titleY=topPhoto&&photo?y+photo.h+cfg.detailSpacing:y;
+  if(photo&&cfg.newsImage&&cfg.photoPosition!=='background'){
+   const box=topPhoto?{...photo,y}:sidePhoto?{...photo,y}:photo;
+   paintPhoto(ctx,cfg.newsImage,box,cfg.photoFit,cfg.photoRounded,100);
+  }
+  ctx.fillStyle=c.fg;ctx.font=cfg.textWeight+' '+font+'px '+serif;ctx.textAlign=cfg.align;ctx.direction='rtl';
+  p.lines.forEach((line,j)=>drawText(ctx,line,titleX,titleY+j*lineHeight,cfg.underline));ctx.textAlign='right';
   if(hasDetail){
-   const detailY=y+p.lines.length*lineHeight+cfg.detailSpacing;
+   const detailY=y+mediaHeight+cfg.detailSpacing;
    ctx.strokeStyle=c.accent;ctx.globalAlpha=.45;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(margin,detailY-12);ctx.lineTo(w-margin,detailY-12);ctx.stroke();ctx.globalAlpha=1;
    ctx.font='400 '+summaryFont+'px '+serif;ctx.fillStyle=c.dim;ctx.textAlign='right';ctx.direction='rtl';
    brief.forEach((line,j)=>ctx.fillText(line,w-margin-(mapW?mapW+22:0),detailY+j*briefLine));
    if(cfg.mapImage){
     const bx=w-margin-mapW,by=detailY,bw=mapW,bh=mapHeight,img=cfg.mapImage;
-    ctx.save();ctx.beginPath();ctx.roundRect(bx,by,bw,bh,10);ctx.clip();
-    ctx.fillStyle='#faf9f3';ctx.fillRect(bx,by,bw,bh);
-    const ratio=Math.min(bw/img.width,bh/img.height);
-    ctx.drawImage(img,bx+(bw-img.width*ratio)/2,by+(bh-img.height*ratio)/2,img.width*ratio,img.height*ratio);ctx.restore();
+    paintPhoto(ctx,img,{x:bx,y:by,w:bw,h:bh},'contain',true,1);
    }
   }
  }
@@ -260,6 +301,12 @@ export default function Studio(){
  const [quoteRole,setQuoteRole]=useState('');
  const [personImage,setPersonImage]=useState<HTMLImageElement|null>(null);
  const [mapImage,setMapImage]=useState<HTMLImageElement|null>(null);
+ const [newsImage,setNewsImage]=useState<HTMLImageElement|null>(null);
+ const [photoPosition,setPhotoPosition]=useState<PhotoPosition>('left');
+ const [photoFit,setPhotoFit]=useState<PhotoFit>('cover');
+ const [photoScale,setPhotoScale]=useState(85);
+ const [photoOpacity,setPhotoOpacity]=useState(40);
+ const [photoRounded,setPhotoRounded]=useState(true);
  const [mediaError,setMediaError]=useState('');
  const [issuer,setIssuer]=useState('');
  const [issuerLogo,setIssuerLogo]=useState<HTMLImageElement|null>(null);
@@ -269,7 +316,7 @@ export default function Studio(){
  const [page,setPage]=useState(0);const [count,setCount]=useState(0);
  const [error,setError]=useState('');const [logo,setLogo]=useState<HTMLImageElement|null>(null);
  const [exporting,setExporting]=useState(false);const canvas=useRef<HTMLCanvasElement>(null);
- const cfg=useMemo(()=>({mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage}),[mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage]);
+ const cfg=useMemo(()=>({mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded}),[mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded]);
  useEffect(()=>{let live=true;const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key){setDirectoryError('لم يكتمل اتصال Supabase');return}
  const rpc=async<T,>(name:string,args:object):Promise<T>=>{const response=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!response.ok)throw new Error('تعذر تحميل التصنيفات');return await response.json() as T};
  void Promise.all((['dossiers','issues','events'] as const).map(async kind=>[kind,await rpc<Entry[]>('sas_public_directory',{p_kind:kind})] as const)).then(items=>{if(live)setDirectory(Object.fromEntries(items) as Record<'dossiers'|'issues'|'events',Entry[]>)}).catch(()=>{if(live)setDirectoryError('تعذر تحميل قوائم ساس')});
@@ -286,8 +333,8 @@ export default function Studio(){
    if(live){setError(result.error);setCount(result.total);if(page>=result.total&&result.total>0)setPage(result.total-1)}
   }catch{if(live)setError('فشل تحميل الخطوط أو الرسم')}
  })()},120);return()=>{live=false;clearTimeout(id)}},[cfg,page]);
- async function loadMedia(file:File|undefined,kind:'person'|'map'){
-  const setter=kind==='person'?setPersonImage:setMapImage;
+ async function loadMedia(file:File|undefined,kind:'person'|'map'|'news'){
+  const setter=kind==='person'?setPersonImage:kind==='map'?setMapImage:setNewsImage;
   if(!file){setter(null);setMediaError('');return}
   if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>5*1024*1024){setMediaError('الصورة يجب أن تكون PNG أو JPEG أو WebP بحجم حتى 5MB');return}
   const url=URL.createObjectURL(file);
@@ -328,6 +375,15 @@ export default function Studio(){
  <label>نوع التصميم<select value={mode} onChange={e=>{const next=e.target.value as Mode;setMode(next);setTextSize(next==='statement'?43:78);setSideMargin(next==='statement'?120:76);setLineSpacing(next==='statement'?1.65:1.45);setPage(0)}}>{(Object.keys(modes) as Mode[]).map(k=><option key={k} value={k}>{modes[k]}</option>)}</select></label>
  <label>{mode==='statement'?'عنوان البيان (حتى 120 حرفًا)':mode==='quote'?'نص التصريح أو الاقتباس':'عنوان الخبر'}<textarea rows={3} maxLength={mode==='statement'?120:900} value={title} onChange={e=>{setTitle(e.target.value);setPage(0)}}/></label>
  {(mode==='news'||mode==='urgent')&&<><label>تفاصيل مختصرة للخبر<textarea rows={4} maxLength={260} value={summary} onChange={e=>{setSummary(e.target.value);setPage(0)}} placeholder="موجز تكميلي يظهر أسفل العنوان في مساحة مستقلة"/></label></>}
+ {(mode==='news'||mode==='urgent')&&<fieldset className="studio-options"><legend>الصورة الرئيسية للخبر أو العاجل</legend>
+ <label>إضافة صورة رئيسية<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'news')}/></label>
+ {newsImage&&<><button type="button" onClick={()=>setNewsImage(null)}>حذف الصورة الرئيسية</button>
+ <label>موضع الصورة<select value={photoPosition} onChange={e=>setPhotoPosition(e.target.value as PhotoPosition)}><option value="left">يسار النص</option><option value="right">يمين النص</option><option value="top">أعلى العنوان</option><option value="background">خلفية خافتة</option></select></label>
+ <label>طريقة العرض<select value={photoFit} onChange={e=>setPhotoFit(e.target.value as PhotoFit)}><option value="cover">قص لملء المساحة</option><option value="contain">احتواء الصورة كاملة</option></select></label>
+ <label>حجم الصورة: {photoScale}%<input type="range" min={45} max={130} step={5} value={photoScale} onChange={e=>setPhotoScale(Number(e.target.value))}/></label>
+ {photoPosition==='background'&&<label>شفافية الخلفية: {photoOpacity}%<input type="range" min={15} max={80} step={5} value={photoOpacity} onChange={e=>setPhotoOpacity(Number(e.target.value))}/></label>}
+ <label><input type="checkbox" checked={photoRounded} onChange={e=>setPhotoRounded(e.target.checked)}/> زوايا الصورة مستديرة</label></>}
+ </fieldset>}
  {mode==='quote'&&<><label>اسم المتحدث<input value={quoteName} maxLength={100} onChange={e=>setQuoteName(e.target.value)}/></label><label>صفة المتحدث<input value={quoteRole} maxLength={150} onChange={e=>setQuoteRole(e.target.value)}/></label><label>صورة المتحدث (اختيارية، حتى 5MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'person')}/></label>{personImage&&<button type="button" onClick={()=>setPersonImage(null)}>حذف صورة المتحدث</button>}</>}
  {(mode==='news'||mode==='urgent'||mode==='quote')&&<fieldset className="studio-options"><legend>السياق الجغرافي (تمهيد لمحرك الخرائط)</legend><label>المنطقة أو المحافظة<input value={location} maxLength={120} placeholder="حضرموت" onChange={e=>setLocation(e.target.value)}/></label><label><input type="checkbox" checked={showLocation} onChange={e=>setShowLocation(e.target.checked)}/> إظهار اسم الموقع في البطاقة</label>{(mode==='news'||mode==='urgent')&&<><label>صورة خريطة مصغرة موثقة (اختيارية)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'map')}/></label>{mapImage&&<button type="button" onClick={()=>setMapImage(null)}>حذف الخريطة المضافة</button>}<small>لا يرسم الاستوديو حدود المحافظات أو يلوّنها تلقائيًا حاليًا. أضف فقط خريطة موثوقة؛ سيتم الربط بمحرك الخرائط لاحقًا.</small></>}</fieldset>}
  {mediaError&&<p role="alert" className="admin-feedback">{mediaError}</p>}
