@@ -61,7 +61,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const titleBottom=headerStart+heading.length*(cfg.titleSize*1.32);
  const top=statement?titleBottom+issuerArea+(cfg.issuerLogo?0:25):Math.max(cfg.topPadding+140,taxBottom+35);
  const footerTop=h-cfg.bottomPadding-150;
- const bottom=statement?footerTop-20:footerTop-45;
+ const bottom=statement?footerTop-(sourceText(cfg)?85:20):cfg.mode==='quote'?footerTop-(sourceText(cfg)?85:45):footerTop-45;
  let font=cfg.textSize;
  let lineHeight=font*cfg.lineSpacing;
  if(bottom-top<36)return {...empty,error:'المساحة المتاحة ضيقة؛ خفف الهوامش أو اختر ارتفاعًا أكبر'};
@@ -97,8 +97,8 @@ function photoBox(cfg:Config,w:number,h:number,margin:number){
  if(!cfg.newsImage)return null;
  const width=w-2*margin;
  const scale=cfg.photoScale/100;
- if(cfg.photoPosition==='background')return {x:margin,y:cfg.topPadding+105,w:width,h:Math.max(100,h-cfg.topPadding-cfg.bottomPadding-310)};
- if(cfg.photoPosition==='top')return {x:margin,y:0,w:width,h:Math.max(115,Math.min(280,Math.round(h*.22*scale)))};
+ if(cfg.photoPosition==='background')return {x:margin+cfg.imageInset,y:cfg.topPadding+105,w:width-2*cfg.imageInset,h:Math.max(100,h-cfg.topPadding-cfg.bottomPadding-310)};
+ if(cfg.photoPosition==='top')return {x:margin+cfg.imageInset,y:0,w:width-2*cfg.imageInset,h:Math.max(115,Math.min(280,Math.round(h*.22*scale)))};
  const photoW=Math.round(Math.min(width*.46,width*.38*scale));
  return {x:cfg.photoPosition==='left'?margin:w-margin-photoW,y:0,w:photoW,h:Math.max(110,Math.min(470,Math.round(h*.36*scale)))};
 }
@@ -168,7 +168,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  const frame=hasPhoto?photoBox(cfg,w,h,margin):null;
  const creditBelow=Boolean(hasPhoto&&cfg.showImageCredit&&cfg.imageCredit.trim()&&cfg.imageCreditPlacement==='below'&&!background);
  const creditH=creditBelow?31:0;
- const pad=cfg.imageInset;
+ const pad=(background||topPhoto)?0:cfg.imageInset;
  const photoW=frame&&!background?Math.min(frame.w,fullWidth-pad*2):0;
  const photoH=frame&&!background?frame.h:0;
  const gap=36;
@@ -314,7 +314,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   const news=p.news;if(!news)return {total:0,error:'فشل تخطيط الخبر'};
   if(news.photo&&cfg.newsImage&&cfg.photoPosition==='background'){
    paintPhoto(ctx,cfg.newsImage,news.photo,cfg.photoFit,cfg.photoRounded,cfg.photoOpacity/100,cfg.imageShape,cfg.imageRadius,cfg.imageBorder,c.accent);
-   ctx.fillStyle=c.bg;ctx.globalAlpha=cfg.skin==='ivory'||cfg.skin==='stone'||cfg.skin==='rose'?.62:.52;
+   ctx.fillStyle=c.bg;ctx.globalAlpha=(cfg.skin==='ivory'||cfg.skin==='stone'||cfg.skin==='rose') ? .62 : .52;
    ctx.fillRect(news.photo.x,news.photo.y,news.photo.w,news.photo.h);ctx.globalAlpha=1;
   }
   if(news.photo&&cfg.newsImage&&cfg.photoPosition!=='background')
@@ -403,6 +403,16 @@ export default function Studio(){
  const [photoRounded,setPhotoRounded]=useState(true);
  const [titleScale,setTitleScale]=useState(100);
  const [hidePathOnBackground,setHidePathOnBackground]=useState(true);
+ const [showWeekday,setShowWeekday]=useState(true);
+ const [sourcePlacement,setSourcePlacement]=useState<SourcePlacement>('after-summary');
+ const [sourcePrefix,setSourcePrefix]=useState('المصدر:');
+ const [headlineDX,setHeadlineDX]=useState(0),[headlineDY,setHeadlineDY]=useState(0),[headlineInset,setHeadlineInset]=useState(15);
+ const [summaryDX,setSummaryDX]=useState(0),[summaryDY,setSummaryDY]=useState(0),[summaryInset,setSummaryInset]=useState(15),[summarySize,setSummarySize]=useState(29);
+ const [sourceDX,setSourceDX]=useState(0),[sourceDY,setSourceDY]=useState(0);
+ const [imageDX,setImageDX]=useState(0),[imageDY,setImageDY]=useState(0),[imageInset,setImageInset]=useState(12);
+ const [imageShape,setImageShape]=useState<PhotoShape>('rounded'),[imageRadius,setImageRadius]=useState(18),[imageBorder,setImageBorder]=useState(0);
+ const [imageCredit,setImageCredit]=useState(''),[showImageCredit,setShowImageCredit]=useState(true),[imageCreditPlacement,setImageCreditPlacement]=useState<PhotoCreditPlacement>('inside');
+ const [wrapHeadline,setWrapHeadline]=useState(true);
  const [mediaError,setMediaError]=useState('');
  const [issuer,setIssuer]=useState('');
  const [issuerLogo,setIssuerLogo]=useState<HTMLImageElement|null>(null);
@@ -412,7 +422,7 @@ export default function Studio(){
  const [page,setPage]=useState(0);const [count,setCount]=useState(0);
  const [error,setError]=useState('');const [logo,setLogo]=useState<HTMLImageElement|null>(null);
  const [exporting,setExporting]=useState(false);const canvas=useRef<HTMLCanvasElement>(null);
- const cfg=useMemo(()=>({mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded,titleScale,hidePathOnBackground}),[mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded,titleScale,hidePathOnBackground]);
+ const cfg=useMemo(()=>({mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded,titleScale,hidePathOnBackground,showWeekday,sourcePlacement,sourcePrefix,headlineDX,headlineDY,headlineInset,summaryDX,summaryDY,summaryInset,summarySize,sourceDX,sourceDY,imageDX,imageDY,imageInset,imageShape,imageRadius,imageBorder,imageCredit,showImageCredit,imageCreditPlacement,wrapHeadline}),[mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded,titleScale,hidePathOnBackground,showWeekday,sourcePlacement,sourcePrefix,headlineDX,headlineDY,headlineInset,summaryDX,summaryDY,summaryInset,summarySize,sourceDX,sourceDY,imageDX,imageDY,imageInset,imageShape,imageRadius,imageBorder,imageCredit,showImageCredit,imageCreditPlacement,wrapHeadline]);
  useEffect(()=>{let live=true;const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key){setDirectoryError('لم يكتمل اتصال Supabase');return}
  const rpc=async<T,>(name:string,args:object):Promise<T>=>{const response=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!response.ok)throw new Error('تعذر تحميل التصنيفات');return await response.json() as T};
  void Promise.all((['dossiers','issues','events'] as const).map(async kind=>[kind,await rpc<Entry[]>('sas_public_directory',{p_kind:kind})] as const)).then(items=>{if(live)setDirectory(Object.fromEntries(items) as Record<'dossiers'|'issues'|'events',Entry[]>)}).catch(()=>{if(live)setDirectoryError('تعذر تحميل قوائم ساس')});
@@ -479,14 +489,20 @@ export default function Studio(){
  <label>حجم الصورة: {photoScale}%<input type="range" min={45} max={130} step={5} value={photoScale} onChange={e=>setPhotoScale(Number(e.target.value))}/></label>
  {photoPosition==='background'&&<label><input type="checkbox" checked={hidePathOnBackground} onChange={e=>setHidePathOnBackground(e.target.checked)}/> إخفاء مسار التصنيف فوق الصورة الخلفية</label>}
  {photoPosition==='background'&&<label>شفافية الخلفية: {photoOpacity}%<input type="range" min={15} max={80} step={5} value={photoOpacity} onChange={e=>setPhotoOpacity(Number(e.target.value))}/></label>}
- <label><input type="checkbox" checked={photoRounded} onChange={e=>setPhotoRounded(e.target.checked)}/> زوايا الصورة مستديرة</label></>}
+ <label><input type="checkbox" checked={photoRounded} onChange={e=>setPhotoRounded(e.target.checked)}/> تفعيل الاستدارة عند اختيار إطار مستدير</label> {newsImage&&<><label>شكل إطار الصورة<select value={imageShape} onChange={e=>setImageShape(e.target.value as PhotoShape)}>
+ <option value="square">مستطيل حاد</option><option value="rounded">زوايا مستديرة</option><option value="mixed">زوايا مختلطة</option><option value="circle">دائرة</option><option value="oval">بيضاوي</option><option value="hexagon">سداسي</option><option value="angled">غير منتظم</option><option value="fade">حواف متلاشية</option></select></label>
+ {(imageShape==='rounded'||imageShape==='mixed')&&<label>استدارة الحواف {imageRadius}px<input type="range" min={0} max={80} step={5} value={imageRadius} onChange={e=>setImageRadius(Number(e.target.value))}/></label>}
+ <label>سمك إطار الصورة {imageBorder}px<input type="range" min={0} max={10} step={1} value={imageBorder} onChange={e=>setImageBorder(Number(e.target.value))}/></label>
+ <label>مصدر الصورة / حقوقها<input value={imageCredit} maxLength={150} placeholder="تصوير: منصة ساس / © الجهة المصورة" onChange={e=>setImageCredit(e.target.value)}/></label>
+ <label><input type="checkbox" checked={showImageCredit} onChange={e=>setShowImageCredit(e.target.checked)}/> إظهار حقوق الصورة</label>
+ {showImageCredit&&imageCredit.trim()&&<label>مكان حقوق الصورة<select value={imageCreditPlacement} onChange={e=>setImageCreditPlacement(e.target.value as PhotoCreditPlacement)}><option value="inside">داخل الصورة</option><option value="below">أسفل الصورة</option></select></label>}</>}</>}
  </fieldset>}
  {mode==='quote'&&<><label>اسم المتحدث<input value={quoteName} maxLength={100} onChange={e=>setQuoteName(e.target.value)}/></label><label>صفة المتحدث<input value={quoteRole} maxLength={150} onChange={e=>setQuoteRole(e.target.value)}/></label><label>صورة المتحدث (اختيارية، حتى 5MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'person')}/></label>{personImage&&<button type="button" onClick={()=>setPersonImage(null)}>حذف صورة المتحدث</button>}</>}
- {(mode==='news'||mode==='urgent'||mode==='quote')&&<fieldset className="studio-options"><legend>السياق الجغرافي (تمهيد لمحرك الخرائط)</legend><label>المنطقة أو المحافظة<input value={location} maxLength={120} placeholder="حضرموت" onChange={e=>setLocation(e.target.value)}/></label><label><input type="checkbox" checked={showLocation} onChange={e=>setShowLocation(e.target.checked)}/> إظهار اسم الموقع في البطاقة</label>{(mode==='news'||mode==='urgent')&&<><label>صورة خريطة مصغرة موثقة (اختيارية)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void loadMedia(e.target.files?.[0],'map')}/></label>{mapImage&&<button type="button" onClick={()=>setMapImage(null)}>حذف الخريطة المضافة</button>}<small>لا يرسم الاستوديو حدود المحافظات أو يلوّنها تلقائيًا حاليًا. أضف فقط خريطة موثوقة؛ سيتم الربط بمحرك الخرائط لاحقًا.</small></>}</fieldset>}
+ {(mode==='news'||mode==='urgent'||mode==='quote')&&<fieldset className="studio-options"><legend>السياق الجغرافي (تمهيد لمحرك الخرائط)</legend><label>المنطقة أو المحافظة<input value={location} maxLength={120} placeholder="حضرموت" onChange={e=>setLocation(e.target.value)}/></label><label><input type="checkbox" checked={showLocation} onChange={e=>setShowLocation(e.target.checked)}/> إظهار اسم الموقع في البطاقة</label></fieldset>}
  {mediaError&&<p role="alert" className="admin-feedback">{mediaError}</p>}
  <label>اسم المصدر (اختياري)<input value={sourceName} maxLength={120} placeholder="وكيل حضرموت الإخباري" onChange={e=>setSourceName(e.target.value)}/></label>
  <label>رابط المصدر (اختياري)<input dir="ltr" type="url" placeholder="https://..." value={sourceUrl} onChange={e=>setSourceUrl(e.target.value)}/></label>
- {(sourceUrl||sourceName)&&<p className="studio-note">سيظهر اسم المصدر أعلى تاريخ البطاقة في منطقة مستقلة. يُستخرج الاسم من الرابط إذا تركت حقل الاسم فارغًا.</p>}
+ {(sourceUrl||sourceName)&&<p className="studio-note">المصدر جزء من المادة التحريرية، ويظهر داخل منطقة المحتوى لا في تذييل الشعار والتاريخ.</p>}
  {mode==='statement'&&<><label>الجهة المصدرة<input value={issuer} maxLength={160} onChange={e=>setIssuer(e.target.value)}/></label>
  <label>شعار الجهة (اختياري · PNG/JPEG/WebP · 5MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void setIssuerImage(e.target.files?.[0])}/></label>
  {issuerLogo&&<button type="button" onClick={()=>{setIssuerLogo(null);setIssuerLogoError('')}}>حذف شعار الجهة</button>}
@@ -515,6 +531,29 @@ export default function Studio(){
  <label><input type="checkbox" checked={showSource} onChange={e=>setShowSource(e.target.checked)}/> إظهار اسم المصدر</label>
  <small>تكييف النص داخل الإطار بالالتفاف والتصغير عند الحاجة. الكشيدة والضبط الكامل يحتاجان خوارزمية تشكيل عربية مستقلة، ولذلك لم يُفعّلا بعد.</small>
  </fieldset>
+ {(mode==='news'||mode==='urgent')&&<fieldset className="studio-options"><legend>تموضع عناصر الخبر داخل المساحة</legend>
+ <details open><summary>العنوان والتفافه حول الصورة</summary>
+ <label><input type="checkbox" checked={wrapHeadline} onChange={e=>setWrapHeadline(e.target.checked)}/> اسمح للعنوان بالاستمرار أسفل الصورة الجانبية</label>
+ <label>هامش العنوان الداخلي: {headlineInset}px<input type="range" min={0} max={100} step={5} value={headlineInset} onChange={e=>setHeadlineInset(Number(e.target.value))}/></label>
+ <label>إزاحة العنوان أفقيًا: {headlineDX}px<input type="range" min={-60} max={60} step={5} value={headlineDX} onChange={e=>setHeadlineDX(Number(e.target.value))}/></label>
+ <label>إزاحة العنوان رأسيًا: {headlineDY}px<input type="range" min={-60} max={60} step={5} value={headlineDY} onChange={e=>setHeadlineDY(Number(e.target.value))}/></label></details>
+ <details><summary>الموجز المختصر</summary>
+ <label>حجم خط الموجز: {summarySize}px<input type="range" min={20} max={45} step={1} value={summarySize} onChange={e=>setSummarySize(Number(e.target.value))}/></label>
+ <label>هامش الموجز الداخلي: {summaryInset}px<input type="range" min={0} max={95} step={5} value={summaryInset} onChange={e=>setSummaryInset(Number(e.target.value))}/></label>
+ <label>إزاحة الموجز أفقيًا: {summaryDX}px<input type="range" min={-60} max={60} step={5} value={summaryDX} onChange={e=>setSummaryDX(Number(e.target.value))}/></label>
+ <label>إزاحة الموجز رأسيًا: {summaryDY}px<input type="range" min={-35} max={80} step={5} value={summaryDY} onChange={e=>setSummaryDY(Number(e.target.value))}/></label></details>
+ <details><summary>الصورة الرئيسية</summary>
+ <label>هامش الصورة الداخلي: {imageInset}px<input type="range" min={0} max={75} step={5} value={imageInset} onChange={e=>setImageInset(Number(e.target.value))}/></label>
+ <label>إزاحة الصورة أفقيًا: {imageDX}px<input type="range" min={-60} max={60} step={5} value={imageDX} onChange={e=>setImageDX(Number(e.target.value))}/></label>
+ <label>إزاحة الصورة رأسيًا: {imageDY}px<input type="range" min={-60} max={60} step={5} value={imageDY} onChange={e=>setImageDY(Number(e.target.value))}/></label></details>
+ <details><summary>مصدر المادة</summary>
+ <label>صيغة الإسناد<select value={sourcePrefix} onChange={e=>setSourcePrefix(e.target.value)}><option value="المصدر:">المصدر:</option><option value="نقلًا عن:">نقلًا عن:</option><option value="وفقًا لـ:">وفقًا لـ:</option></select></label>
+ <label>موضع المصدر<select value={sourcePlacement} onChange={e=>setSourcePlacement(e.target.value as SourcePlacement)}><option value="before-summary">قبل الموجز</option><option value="after-summary">بعد الموجز</option></select></label>
+ <label>إزاحة المصدر أفقيًا: {sourceDX}px<input type="range" min={-60} max={60} step={5} value={sourceDX} onChange={e=>setSourceDX(Number(e.target.value))}/></label>
+ <label>إزاحة المصدر رأسيًا: {sourceDY}px<input type="range" min={-35} max={75} step={5} value={sourceDY} onChange={e=>setSourceDY(Number(e.target.value))}/></label></details>
+ <small>تتحرك العناصر ضمن الهوامش الآمنة؛ إذا لم تتسع المساحة يظهر تنبيه بدلاً من إسقاط أسطر النص.</small>
+ </fieldset>}
+ <label><input type="checkbox" checked={showWeekday} onChange={e=>setShowWeekday(e.target.checked)}/> إظهار اسم اليوم مع التاريخ</label>
  <label>التاريخ<input dir="ltr" value={date} onChange={e=>setDate(e.target.value)} pattern="[0-9]{4}/[0-9]{2}/[0-9]{2}"/></label>
  {error&&<p role="alert" className="admin-feedback">{error}</p>}
  <button type="button" onClick={()=>void exportPages()} disabled={exporting||!!error||!count||!logo}>{exporting?'جارٍ التصدير…':count>1?'تصدير جميع الصفحات PNG':'تصدير PNG'}</button>
