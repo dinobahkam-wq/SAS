@@ -50,7 +50,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const headerStart=statement?(cfg.issuerLogo?taxBottom+170:taxBottom+14):taxBottom;
  const titleBottom=headerStart+heading.length*(cfg.titleSize*1.32);
  const top=statement?titleBottom+issuerArea+(cfg.issuerLogo?0:25):Math.max(205,taxBottom+35);
- const bottom=h-176-(cfg.mode==='news'||cfg.mode==='urgent'?(cfg.summary.trim()?175:0):0);
+ const bottom=h-176-(cfg.mode==='news'||cfg.mode==='urgent'?((cfg.summary.trim()||cfg.mapImage)?224:0):0);
  let font=cfg.textSize;
  let lineHeight=font*cfg.lineSpacing;
  if(bottom-top<lineHeight*2)return {...empty,error:'المساحة لا تكفي للنص والتصنيف؛ اختر مقاسًا أطول أو اختصر مسار التصنيف'};
@@ -157,7 +157,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   const x=cfg.align==='center'?w/2:w-margin;
   p.lines.forEach((line,j)=>drawText(ctx,line,x,y+j*lineHeight,cfg.underline));ctx.textAlign='right';
  }
- if((cfg.mode==='news'||cfg.mode==='urgent')&&cfg.summary.trim()){
+ if((cfg.mode==='news'||cfg.mode==='urgent')&&(cfg.summary.trim()||cfg.mapImage)){
   const sumTop=h-340;const maxWidth=w-margin*2-(cfg.mapImage?205:0);
   ctx.fillStyle=c.accent;ctx.fillRect(margin,sumTop-18,w-margin*2,2);
   ctx.font='400 29px '+serif;ctx.fillStyle=c.dim;ctx.textAlign='right';ctx.direction='rtl';
