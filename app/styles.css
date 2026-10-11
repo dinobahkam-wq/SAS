@@ -182,3 +182,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 
 /* Studio V2: paginated statement navigation */
 .studio-pager{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:17px}.studio-pager button{padding:9px 20px;border-radius:8px;border:1px solid #b9c8c3;background:#fff;color:#163f37;font:inherit;cursor:pointer}.studio-pager button:disabled{opacity:.38;cursor:default}.studio-pager span{font-variant-numeric:tabular-nums;color:#506460}
+
+.studio-taxonomy{border:1px solid #d8e1e2;border-radius:12px;display:grid;gap:12px;padding:14px;margin:0}.studio-taxonomy legend{font-weight:700;padding:0 8px;color:#263f39}.studio-taxonomy label{font-weight:500}.studio-fields input[type=file]{padding:9px;max-width:100%}
