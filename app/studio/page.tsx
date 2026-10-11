@@ -37,7 +37,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  if(statement&&!cfg.title.trim())return {pages:[],font:0,lineHeight:0,error:'أدخل عنوان البيان'};
  let font=statement?(cfg.format==='landscape'?33:43):(cfg.format==='landscape'?73:86);
  let lineHeight=font*(statement?1.7:1.49);
- const top=statement?315:202;
+ const top=statement?385:202;
  const bottom=h-174;
  if(bottom-top<lineHeight*3)return {pages:[],font:0,lineHeight:0,error:'القياس الأفقي غير مناسب للبيان؛ اختر المربع أو العمودي'};
  if(statement){
@@ -79,11 +79,11 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
  if(cfg.mode==='statement'){
   ctx.fillStyle=c.fg;ctx.font='500 51px '+serif;
   const titleLines=toLines(ctx,cfg.title,w-152);
-  if(titleLines.length>1)return {total:pages.length,error:'عنوان البيان أطول من المساحة المحددة؛ اختصر العنوان إلى سطر واحد، وضع النص الكامل في المتن'};
+  if(titleLines.length>2)return {total:pages.length,error:'عنوان البيان أطول من سطرين؛ استخدم عنوانًا موجزًا وانقل النص الكامل إلى المتن'};
   titleLines.forEach((line,j)=>ctx.fillText(line,w-76,170+j*70));
-  ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.fillText(cfg.issuer||'الجهة المصدرة غير محددة',w-76,266);
+  ctx.fillStyle=c.dim;ctx.font='400 25px '+sans;ctx.fillText(cfg.issuer||'الجهة المصدرة غير محددة',w-76,325);
   ctx.fillStyle=c.fg;ctx.font='400 '+font+'px '+sans;
-  p.lines.forEach((line,j)=>{if(line)ctx.fillText(line,w-76,326+j*lineHeight)});
+  p.lines.forEach((line,j)=>{if(line)ctx.fillText(line,w-76,385+j*lineHeight)});
  }else{
   ctx.fillStyle=c.fg;ctx.font='500 '+font+'px '+serif;
   const y=Math.max(210,Math.floor((h-p.lines.length*lineHeight)/2)-5);
