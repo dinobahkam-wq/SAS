@@ -54,7 +54,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const titleBottom=headerStart+heading.length*(cfg.titleSize*1.32);
  const top=statement?titleBottom+issuerArea+(cfg.issuerLogo?0:25):Math.max(cfg.topPadding+140,taxBottom+35);
  const footerTop=h-cfg.bottomPadding-150;
- const bottom=statement?footerTop-20:footerTop-18;
+ const bottom=statement?footerTop-20:footerTop-45;
  let font=cfg.textSize;
  let lineHeight=font*cfg.lineSpacing;
  if(bottom-top<36)return {...empty,error:'المساحة المتاحة ضيقة؛ خفف الهوامش أو اختر ارتفاعًا أكبر'};
@@ -81,7 +81,7 @@ function plan(cfg:Config,ctx:CanvasRenderingContext2D):{pages:Page[];font:number
  const sidePhoto=photographic&&(cfg.photoPosition==='left'||cfg.photoPosition==='right');
  const hasDetail=Boolean(cfg.summary.trim()||cfg.mapImage);
  const mapW=cfg.mapImage?Math.min(180,Math.floor(width*.27)):0;
- const titleWidth=sidePhoto&&photo?width-photo.w-40:width;
+ const titleWidth=sidePhoto&&photo?width-photo.w-46:width;
  const summaryWidth=width-(mapW?mapW+22:0);
  const briefFont=Math.max(20,Math.min(31,Math.round(w*.026)));
  ctx.font='400 '+briefFont+'px '+serif;
@@ -215,7 +215,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
   const y=cfg.vertical==='top'?top:cfg.vertical==='bottom'?maxY:Math.max(top,Math.floor((top+maxY)/2));
   if(photo&&cfg.newsImage&&cfg.photoPosition==='background'){
    paintPhoto(ctx,cfg.newsImage,photo,cfg.photoFit,cfg.photoRounded,cfg.photoOpacity/100);
-   ctx.fillStyle=c.bg;ctx.globalAlpha=.78;ctx.fillRect(photo.x,photo.y,photo.w,photo.h);ctx.globalAlpha=1;
+   ctx.fillStyle=c.bg;ctx.globalAlpha=.83;ctx.fillRect(photo.x,photo.y,photo.w,photo.h);ctx.globalAlpha=1;
   }
   const titleRight=sidePhoto&&photo&&cfg.photoPosition==='right'?w-margin-photo.w-40:w-margin;
   const titleLeft=sidePhoto&&photo&&cfg.photoPosition==='left'?margin+photo.w+40:margin;
