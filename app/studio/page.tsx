@@ -13,7 +13,7 @@ type PhotoCreditPlacement='inside'|'below';
 type HeadlineRow={text:string;left:number;right:number;y:number};
 type PhotoRect={x:number;y:number;w:number;h:number};
 type StudioPreset={name:string;mode:Mode;format:Format;skin:Skin;photoPosition:PhotoPosition;photoFit:PhotoFit;imageShape:PhotoShape;photoScale:number;imageRadius:number;imageBorder:number;photoOpacity:number;titleScale:number;textSize:number;lineSpacing:number;summaryLineSpacing:number;detailSpacing:number;headlineInset:number;headlineDX:number;headlineDY:number;summarySize:number;summaryInset:number;summaryDX:number;summaryDY:number;imageInset:number;imageDX:number;imageDY:number;sourcePlacement:SourcePlacement;sourceDX:number;sourceDY:number;wrapHeadline:boolean;showWeekday:boolean;showPath:boolean;sideMargin:number;topPadding:number;bottomPadding:number};
-type NewsGeometry={rows:HeadlineRow[];photo:PhotoRect|null;summaryLines:string[];summaryY:number;summaryRight:number;summaryFont:number;summaryLineHeight:number;source:string;sourceY:number|null;sourceRight:number;creditBelowY:number|null};
+type NewsGeometry={rows:HeadlineRow[];photo:PhotoRect|null;summaryLines:string[];summaryY:number;summaryRight:number;summaryFont:number;summaryLineHeight:number;source:string;sourceY:number|null;sourceRight:number;locationText:string;locationY:number|null;creditBelowY:number|null};
 type Page={lines:string[];news?:NewsGeometry};
 type KnowledgePath={dossier:string;issue:string;event:string};
 type Entry={slug:string;title_ar:string;summary_ar:string|null;starts_at:string|null};
@@ -228,7 +228,10 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  if(source&&cfg.sourcePlacement==='after-summary'){
   sourceY=next+(summaryLines.length?18:0)+Math.max(-12,cfg.sourceDY);next=Math.max(next,sourceY)+sourceH;
  }
- const low=Math.min(0,dy,photoY,summaryY||(sourceY??0),sourceY??0);
+ const locationText=cfg.showLocation&&cfg.location.trim()?'الموقع: '+cfg.location.trim():'';
+ const locationY=locationText?next+18:null;
+ if(locationY!==null)next=locationY+30;
+ const low=Math.min(0,dy,frame&&!background?photoY:0,summaryLines.length?summaryY:0,sourceY??0);
  const high=Math.max(titleBottom,photoBottom,next,0);
  const total=high-low+12;
  if(total>bottom-top)return null;
@@ -240,6 +243,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  :{x:photoX,y:origin+photoY,w:frame.w,h:photoH}:null;
  return {rows,photo:imageRect,summaryLines,summaryY:origin+summaryY,summaryRight,summaryFont,summaryLineHeight,
  source,sourceY:sourceY===null?null:origin+sourceY,sourceRight:clamp(w-margin-40+cfg.sourceDX,margin+150,w-margin),
+ locationText,locationY:locationY===null?null:origin+locationY,
  creditBelowY:creditBelow&&imageRect?imageRect.y+imageRect.h+5:null};
 }
 function sourceLabel(raw:string):string{
@@ -334,6 +338,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
    ctx.direction='rtl';ctx.textAlign='right';ctx.font='500 25px '+serif;ctx.fillStyle=c.accent;
    ctx.fillText(ellipsis(ctx,news.source,Math.max(120,news.sourceRight-margin-15)),news.sourceRight,news.sourceY);
   }
+  if(news.locationY!==null){ctx.fillStyle=c.accent;ctx.font='500 23px '+serif;ctx.direction='rtl';ctx.textAlign='right';ctx.fillText(ellipsis(ctx,news.locationText,w-2*margin),w-margin-20,news.locationY)}
   if(news.photo&&cfg.newsImage)photoCredit(ctx,cfg,news.photo,news.creditBelowY,c.dim);
  }
 
@@ -349,7 +354,7 @@ function draw(canvas:HTMLCanvasElement,cfg:Config,index:number):{total:number;er
  }else{
   ctx.fillStyle='#183833';ctx.font='700 30px '+sans;ctx.textAlign='center';ctx.fillText('ساس',badgeX+badgeW/2,badgeY+42);ctx.textAlign='right';
  }
- if(cfg.showLocation&&cfg.location.trim()){ctx.fillStyle=c.accent;ctx.font='500 24px '+serif;ctx.direction='rtl';ctx.textAlign='right';ctx.fillText(ellipsis(ctx,'الموقع: '+cfg.location,w-margin*2),w-margin,foot-47)}
+ if(cfg.mode!=='news'&&cfg.mode!=='urgent'&&cfg.showLocation&&cfg.location.trim()){ctx.fillStyle=c.accent;ctx.font='500 24px '+serif;ctx.direction='rtl';ctx.textAlign='right';ctx.fillText(ellipsis(ctx,'الموقع: '+cfg.location,w-margin*2),w-margin,foot-47)}
  ctx.fillStyle=c.dim;ctx.font='400 24px '+sans;ctx.direction='ltr';ctx.textAlign='left';
  ctx.fillText(calendarDate(cfg.date,cfg.showWeekday),margin,foot+88);
  if(cfg.mode==='statement')ctx.fillText(String(index+1)+' / '+String(pages.length),margin,foot+115);
