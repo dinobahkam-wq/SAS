@@ -12,6 +12,7 @@ type SourcePlacement='before-summary'|'after-summary';
 type PhotoCreditPlacement='inside'|'below';
 type HeadlineRow={text:string;left:number;right:number;y:number};
 type PhotoRect={x:number;y:number;w:number;h:number};
+type StudioPreset={name:string;mode:Mode;format:Format;skin:Skin;photoPosition:PhotoPosition;photoFit:PhotoFit;imageShape:PhotoShape;photoScale:number;imageRadius:number;imageBorder:number;photoOpacity:number;titleScale:number;textSize:number;lineSpacing:number;summaryLineSpacing:number;detailSpacing:number;headlineInset:number;headlineDX:number;headlineDY:number;summarySize:number;summaryInset:number;summaryDX:number;summaryDY:number;imageInset:number;imageDX:number;imageDY:number;sourcePlacement:SourcePlacement;sourceDX:number;sourceDY:number;wrapHeadline:boolean;showWeekday:boolean;showPath:boolean;sideMargin:number;topPadding:number;bottomPadding:number};
 type NewsGeometry={rows:HeadlineRow[];photo:PhotoRect|null;summaryLines:string[];summaryY:number;summaryRight:number;summaryFont:number;summaryLineHeight:number;source:string;sourceY:number|null;sourceRight:number;creditBelowY:number|null};
 type Page={lines:string[];news?:NewsGeometry};
 type KnowledgePath={dossier:string;issue:string;event:string};
@@ -214,6 +215,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  const sumSpace=Math.abs(cfg.summaryDX)+cfg.summaryInset;
  const summaryRight=w-margin-sumSpace+cfg.summaryDX;
  const summaryWidth=fullWidth-2*sumSpace;
+ if(summaryWidth<100)return null;
  ctx.font='400 '+summaryFont+'px '+serif;
  const summaryLines=cfg.summary.trim()?toLines(ctx,cfg.summary.trim(),summaryWidth):[];
  const summaryH=summaryLines.length*summaryLineHeight;
@@ -234,7 +236,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
  const origin=cfg.vertical==='top'?top-low:cfg.vertical==='bottom'?top+free-low:top+free/2-low;
  for(const row of rows)row.y+=origin;
  const imageRect=frame?background
- ?{x:clamp(frame.x+cfg.imageDX,margin+pad,w-margin-pad-frame.w),y:top+10+cfg.imageDY,w:frame.w,h:Math.max(80,bottom-top-24)}
+ ?{x:clamp(frame.x+cfg.imageDX,margin+pad,w-margin-pad-frame.w),y:clamp(top+10+cfg.imageDY,top,bottom-95),w:frame.w,h:Math.max(80,bottom-clamp(top+10+cfg.imageDY,top,bottom-95)-12)}
  :{x:photoX,y:origin+photoY,w:frame.w,h:photoH}:null;
  return {rows,photo:imageRect,summaryLines,summaryY:origin+summaryY,summaryRight,summaryFont,summaryLineHeight,
  source,sourceY:sourceY===null?null:origin+sourceY,sourceRight:clamp(w-margin-40+cfg.sourceDX,margin+150,w-margin),
@@ -413,6 +415,9 @@ export default function Studio(){
  const [imageShape,setImageShape]=useState<PhotoShape>('rounded'),[imageRadius,setImageRadius]=useState(18),[imageBorder,setImageBorder]=useState(0);
  const [imageCredit,setImageCredit]=useState(''),[showImageCredit,setShowImageCredit]=useState(true),[imageCreditPlacement,setImageCreditPlacement]=useState<PhotoCreditPlacement>('inside');
  const [wrapHeadline,setWrapHeadline]=useState(true);
+ const [presetName,setPresetName]=useState('');
+ const [presets,setPresets]=useState<StudioPreset[]>([]);
+ const [presetError,setPresetError]=useState('');
  const [mediaError,setMediaError]=useState('');
  const [issuer,setIssuer]=useState('');
  const [issuerLogo,setIssuerLogo]=useState<HTMLImageElement|null>(null);
@@ -423,6 +428,39 @@ export default function Studio(){
  const [error,setError]=useState('');const [logo,setLogo]=useState<HTMLImageElement|null>(null);
  const [exporting,setExporting]=useState(false);const canvas=useRef<HTMLCanvasElement>(null);
  const cfg=useMemo(()=>({mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded,titleScale,hidePathOnBackground,showWeekday,sourcePlacement,sourcePrefix,headlineDX,headlineDY,headlineInset,summaryDX,summaryDY,summaryInset,summarySize,sourceDX,sourceDY,imageDX,imageDY,imageInset,imageShape,imageRadius,imageBorder,imageCredit,showImageCredit,imageCreditPlacement,wrapHeadline}),[mode,format,customWidth,customHeight,topPadding,bottomPadding,detailSpacing,summaryLineSpacing,skin,title,body,issuer,date,logo,issuerLogo,path,bodyWeight,titleSize,showPath,sourceUrl,sourceName,showSource,textSize,textWeight,align,underline,sideMargin,lineSpacing,vertical,summary,location,showLocation,quoteName,quoteRole,personImage,mapImage,newsImage,photoPosition,photoFit,photoScale,photoOpacity,photoRounded,titleScale,hidePathOnBackground,showWeekday,sourcePlacement,sourcePrefix,headlineDX,headlineDY,headlineInset,summaryDX,summaryDY,summaryInset,summarySize,sourceDX,sourceDY,imageDX,imageDY,imageInset,imageShape,imageRadius,imageBorder,imageCredit,showImageCredit,imageCreditPlacement,wrapHeadline]);
+ useEffect(()=>{
+  try{const parsed:unknown=JSON.parse(window.localStorage.getItem('sas-studio-presets-v3')||'[]');
+   if(Array.isArray(parsed))setPresets(parsed.filter((item:unknown):item is StudioPreset=>
+    typeof item==='object'&&item!==null&&typeof (item as StudioPreset).name==='string'&&
+    typeof (item as StudioPreset).titleScale==='number'&&typeof (item as StudioPreset).photoScale==='number'
+   ).slice(0,15));
+  }catch{setPresetError('تعذر قراءة قوالبك المحفوظة؛ لم تُحذف')}
+ },[]);
+ function snapshot(name:string):StudioPreset{
+  return {name,mode,format,skin,photoPosition,photoFit,imageShape,photoScale,imageRadius,imageBorder,photoOpacity,titleScale,textSize,lineSpacing,summaryLineSpacing,detailSpacing,headlineInset,headlineDX,headlineDY,summarySize,summaryInset,summaryDX,summaryDY,imageInset,imageDX,imageDY,sourcePlacement,sourceDX,sourceDY,wrapHeadline,showWeekday,showPath,sideMargin,topPadding,bottomPadding};
+ }
+ function applyPreset(p:StudioPreset){
+  setMode(p.mode);setFormat(p.format);setSkin(p.skin);setPhotoPosition(p.photoPosition);setPhotoFit(p.photoFit);setImageShape(p.imageShape);
+  setPhotoScale(p.photoScale);setImageRadius(p.imageRadius);setImageBorder(p.imageBorder);setPhotoOpacity(p.photoOpacity);
+  setTitleScale(p.titleScale);setTextSize(p.textSize);setLineSpacing(p.lineSpacing);setSummaryLineSpacing(p.summaryLineSpacing);
+  setDetailSpacing(p.detailSpacing);setHeadlineInset(p.headlineInset);setHeadlineDX(p.headlineDX);setHeadlineDY(p.headlineDY);
+  setSummarySize(p.summarySize);setSummaryInset(p.summaryInset);setSummaryDX(p.summaryDX);setSummaryDY(p.summaryDY);
+  setImageInset(p.imageInset);setImageDX(p.imageDX);setImageDY(p.imageDY);setSourcePlacement(p.sourcePlacement);
+  setSourceDX(p.sourceDX);setSourceDY(p.sourceDY);setWrapHeadline(p.wrapHeadline);setShowWeekday(p.showWeekday);
+  setShowPath(p.showPath);setSideMargin(p.sideMargin);setTopPadding(p.topPadding);setBottomPadding(p.bottomPadding);
+  setPage(0);setPresetError('');
+ }
+ function savePreset(){
+  const name=presetName.trim();if(!name){setPresetError('اكتب اسم القالب أولًا');return}
+  const item=snapshot(name);const list=[...presets.filter(p=>p.name!==name),item].slice(-15);
+  try{window.localStorage.setItem('sas-studio-presets-v3',JSON.stringify(list));setPresets(list);setPresetError('');}
+  catch{setPresetError('تعذر حفظ القالب على هذا المتصفح')}
+ }
+ function deletePreset(name:string){
+  const list=presets.filter(p=>p.name!==name);
+  try{window.localStorage.setItem('sas-studio-presets-v3',JSON.stringify(list));setPresets(list);setPresetName('');setPresetError('')}
+  catch{setPresetError('تعذر تعديل القوالب المحفوظة')}
+ }
  useEffect(()=>{let live=true;const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;if(!url||!key){setDirectoryError('لم يكتمل اتصال Supabase');return}
  const rpc=async<T,>(name:string,args:object):Promise<T>=>{const response=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(args)});if(!response.ok)throw new Error('تعذر تحميل التصنيفات');return await response.json() as T};
  void Promise.all((['dossiers','issues','events'] as const).map(async kind=>[kind,await rpc<Entry[]>('sas_public_directory',{p_kind:kind})] as const)).then(items=>{if(live)setDirectory(Object.fromEntries(items) as Record<'dossiers'|'issues'|'events',Entry[]>)}).catch(()=>{if(live)setDirectoryError('تعذر تحميل قوائم ساس')});
@@ -516,6 +554,18 @@ export default function Studio(){
  <label>الحدث<select value={path.event} onChange={e=>{setPath(p=>({...p,event:e.target.value}));setPage(0)}}><option value="">دون حدث</option>{(path.issue?relations.filter(x=>x.kind==='events').map(x=>({slug:x.slug,title_ar:x.title})):directory.events).map(x=><option key={x.slug} value={x.title_ar}>{x.title_ar}</option>)}</select></label></fieldset>
  <label>المقاس<select value={format} onChange={e=>{setFormat(e.target.value as Format);setPage(0)}}>{(Object.keys(sizes) as Format[]).map(k=><option key={k} value={k} >{sizes[k].label}</option>)}</select></label>
  {format==='custom'&&<div className="studio-custom-size"><label>العرض بالبكسل<input type="number" min={600} max={2400} step={10} value={customWidth} onChange={e=>{setCustomWidth(Number(e.target.value));setPage(0)}}/></label><label>الارتفاع بالبكسل<input type="number" min={600} max={3000} step={10} value={customHeight} onChange={e=>{setCustomHeight(Number(e.target.value));setPage(0)}}/></label></div>}
+ <fieldset className="studio-options"><legend>مكتبة تفضيلات القوالب</legend>
+ <p className="studio-note">قوالب سريعة لإعداد التخطيط. لا تحفظ الصور المرفوعة ولا محتوى الأخبار.</p>
+ <button type="button" onClick={()=>{setMode('news');setSkin('ivory');setPhotoPosition('top');setTitleScale(95);setSummarySize(28);setShowPath(true);setPage(0)}}>خبر بصورة علوية</button>
+ <button type="button" onClick={()=>{setMode('news');setSkin('forest');setPhotoPosition('left');setTitleScale(90);setWrapHeadline(true);setSummarySize(28);setPage(0)}}>خبر بصورة جانبية</button>
+ <button type="button" onClick={()=>{setMode('urgent');setSkin('forest');setPhotoPosition('background');setTitleScale(95);setHidePathOnBackground(true);setPage(0)}}>عاجل بخلفية مصورة</button>
+ <label>اسم القالب الشخصي<input value={presetName} maxLength={48} placeholder="قالبي الإخباري" onChange={e=>setPresetName(e.target.value)}/></label>
+ <button type="button" onClick={savePreset}>حفظ التفضيلات الحالية</button>
+ {presets.length>0&&<label>قوالبي المحفوظة<select value="" onChange={e=>{const p=presets.find(v=>v.name===e.target.value);if(p){applyPreset(p);setPresetName(p.name)}}}>
+ <option value="">اختر قالبًا</option>{presets.map(p=><option key={p.name} value={p.name}>{p.name}</option>)}</select></label>}
+ {presets.some(p=>p.name===presetName.trim())&&<button type="button" onClick={()=>deletePreset(presetName.trim())}>حذف القالب المحدد</button>}
+ {presetError&&<p role="alert" className="admin-feedback">{presetError}</p>}
+ </fieldset>
  <label>لوحة الألوان<select value={skin} onChange={e=>setSkin(e.target.value as Skin)}><option value="forest">أخضر عميق</option><option value="ink">حبر داكن</option><option value="ivory">عاجي</option><option value="navy">كحلي مؤسسي</option><option value="olive">زيتوني</option><option value="stone">رمادي دافئ</option><option value="rose">وردي ترابي</option></select></label>
  <fieldset className="studio-options"><legend>تخصيصات التصميم</legend><label><input type="checkbox" checked={showPath} onChange={e=>setShowPath(e.target.checked)}/> إظهار مسار التصنيف</label>{mode==='statement'&&<><label>وزن متن البيان<select value={bodyWeight} onChange={e=>setBodyWeight(Number(e.target.value) as 300|400)}><option value={300}>Light — خفيف</option><option value={400}>Regular — عادي</option></select></label><label>حجم عنوان البيان: {titleSize}px<input type="range" min={52} max={74} step={2} value={titleSize} onChange={e=>setTitleSize(Number(e.target.value))}/></label></>}</fieldset>
  <fieldset className="studio-options"><legend>تنسيق النص والإطار غير المرئي</legend>
