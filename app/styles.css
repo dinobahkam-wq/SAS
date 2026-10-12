@@ -197,7 +197,7 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .brief-aside-heading{font-weight:700;font-size:14px}.brief-lead aside dl{margin:15px 0 0}
 .brief-lead aside dl div{padding:13px 0;border-top:1px solid #d7dfd5}.brief-lead aside dt{font-size:12px;color:#698075}.brief-lead aside dd{margin:6px 0 0;font-size:13px;font-weight:700}
 .brief-section{padding:52px 0;border-bottom:1px solid #c7d0c7}
-.brief-section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}
+.brief-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:24px}
 .brief-section-head h2,.brief-reading h2,.brief-method h2{font-family:var(--font-sas-display),serif;font-size:37px;font-weight:500;margin:6px 0}
 .brief-section-head>p{font-size:12px;color:#77877e;max-width:260px}
 .brief-feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
