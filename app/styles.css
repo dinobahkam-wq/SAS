@@ -270,3 +270,32 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .brief-admin-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}.brief-admin-row label{flex:1;min-width:160px}.brief-admin-item{background:#f6f9f5;border:1px solid #dce6dc;border-radius:9px;padding:15px;display:grid;gap:11px}
 .brief-admin-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.brief-admin-item-head strong{font-size:13px}.brief-admin-panel .brief-admin-item-head button{background:#e7ede6;color:#315944;padding:7px 12px}
 @media(max-width:850px){.brief-admin{padding:18px}.brief-admin-layout{grid-template-columns:1fr}}
+
+
+/* V3-A: editorial imagery, continuous ticker and compact accordion */
+.bv3-ticker{display:flex;align-items:center;gap:0;min-width:0;background:#17392b;color:#f4f8f2;border-radius:8px;margin-top:14px;overflow:hidden;min-height:42px}
+.bv3-ticker-label{flex:none;display:flex;align-items:center;gap:7px;padding:0 15px;font-weight:700;font-size:12px;border-left:1px solid #496d56;white-space:nowrap}
+.bv3-live-dot{width:6px;height:6px;border-radius:50%;background:#91bd92}
+.bv3-ticker-window{min-width:0;flex:1;overflow:hidden}
+.bv3-ticker-track{display:flex;align-items:center;width:max-content;animation:bv3-marquee 55s linear infinite}
+.bv3-ticker-track.is-paused,.bv3-ticker-window:hover .bv3-ticker-track,.bv3-ticker-window:focus-within .bv3-ticker-track{animation-play-state:paused}
+.bv3-ticker-track button{flex:none;cursor:pointer;background:transparent;color:#eff7ef;font:500 12px var(--font-sas-sans),sans-serif;padding:11px 25px;border:0;white-space:nowrap}
+.bv3-ticker-track button:hover,.bv3-ticker-track button:focus-visible{color:#d0ecc4;text-decoration:underline}
+.bv3-ticker-track button span{color:#a1c3a2;font-size:8px;padding-left:9px}
+.bv3-ticker-pause{flex:none;align-self:stretch;min-width:42px;color:white;background:#325945;border:0;cursor:pointer;font-size:13px}
+@keyframes bv3-marquee{to{transform:translateX(50%)}}
+.bv3-card-image{height:114px;margin:-15px -17px 12px;position:relative;overflow:hidden;background:linear-gradient(135deg,#bdd0c3,#e4e8dc)}
+.bv3-card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease;filter:saturate(.7)}
+.bv2-major-card:hover .bv3-card-image img{transform:scale(1.035)}
+.bv3-card-image>span{position:absolute;bottom:8px;right:8px;background:#152f25db;color:#fff;border-radius:4px;font-size:10px;padding:4px 7px}
+.bv3-accordion{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:13px;align-items:start}
+.bv3-acc-item{border-top:1px solid #dce6de;min-width:0}.bv3-acc-item.is-open{background:#f1f6f0;border-radius:7px}
+.bv3-acc-item h3{margin:0;font-size:inherit}.bv3-acc-item h3 button{width:100%;background:transparent;border:0;color:inherit;cursor:pointer;font:inherit;text-align:right;display:grid;grid-template-columns:92px minmax(0,1fr) 22px;gap:10px;align-items:center;padding:14px 10px;min-height:64px}
+.bv3-acc-item h3 button:hover,.bv3-acc-item h3 button:focus-visible{background:#eaf2e9;outline:2px solid #92b29a;outline-offset:-2px}
+.bv3-acc-chevron{color:#5a8465;font-size:21px;justify-self:center;line-height:1}
+.bv3-acc-body{padding:0 15px 17px;animation:bv2-reveal .2s ease-out}.bv3-acc-body p{font-size:12px;line-height:1.9;color:#556e5d;margin:0 0 9px}.bv3-acc-body button{background:#244d37;color:white;border:0;border-radius:7px;font:600 12px var(--font-sas-sans),sans-serif;padding:9px 13px;cursor:pointer}
+.bv3-dialog-media{margin:-22px -28px 22px;position:relative;background:#e2e9e2}.bv3-dialog-media img{width:100%;height:200px;display:block;object-fit:cover;filter:saturate(.7)}.bv3-dialog-media figcaption{font-size:11px;padding:9px 17px;color:#52695c}
+@media(max-width:900px){.bv3-accordion{grid-template-columns:1fr}.bv3-card-image{height:130px}}
+@media(max-width:640px){.bv3-ticker-label{padding:0 9px;font-size:10px}.bv3-ticker-track button{font-size:11px;padding:12px 14px}.bv3-card-image{height:160px}.bv3-dialog-media{margin:-20px -20px 18px}}
+@media(prefers-reduced-motion:reduce){.bv3-ticker-track{animation:none;transform:none}.bv3-card-image img{transition:none}}
+@media print{.bv3-ticker{display:none!important}.bv3-acc-body{display:block!important}}
