@@ -37,3 +37,21 @@ npm run lint
 ```
 
 The SQL is a review artifact, not a script to paste into the production SQL editor yet.
+
+## Package 2: draft-management RPCs and editor (2026-10-12)
+- Review-only SQL file: `docs/database/briefing_db_v1_rpc_review.sql`.
+- Functions: `sas_briefing_admin_list`, `sas_briefing_admin_development_options`, `sas_briefing_admin_save`, `sas_briefing_admin_set_items`.
+- Access: authenticated active team members for listing; active admin/editor for mutations; only approved/published underlying developments can be selected.
+- Writes are limited to `draft` editions, and `set_items` validates entries before transactional replacement.
+- UI at `/admin/briefings` is protected through existing Supabase user authentication and database RPC role checks. No live persistence is possible before applying the two reviewed SQL files in order.
+- `/admin` includes a link to the new editor.
+- No publication, correction, withdrawal, or anonymous public read RPC has been opened. Those require a second security review and operational tests.
+- Data consistency caveat: saving text and saving item associations are currently **two RPC calls**, so a network failure between them can leave a partially updated draft. This must be improved to a single transactional write before production approval.
+- Revision history is schema-only until transactional snapshots and immutable access contracts are enforced.
+
+### Verification still required
+1. Review both SQL files and apply to a **nonproduction** Postgres/Supabase test environment first.
+2. Verify deny-by-default RLS, anonymous calls, unauthorized authenticated calls, and admin/editor flows.
+3. Confirm the database supports the configured identity sequence privileges.
+4. Run `npm run lint` and manual checks for login, drafts, adding/removing developments, and mobile layout.
+5. The user must explicitly approve any application to the production database.
