@@ -258,3 +258,15 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 @media(max-width:640px){.brief-v2{padding:16px 15px 34px}.bv2-top{align-items:start;flex-direction:column}.bv2-meta{text-align:right}.bv2-toolbar{align-items:flex-start}.bv2-tabs{max-width:65%;gap:0}.bv2-tabs a{padding:7px}.bv2-summary,.bv2-analysis,.bv2-major-grid{grid-template-columns:1fr}.bv2-major-card{min-height:0}.bv2-summary-main,.bv2-summary-aside{padding:17px}.bv2-section-head{align-items:start;flex-direction:column;gap:2px}.bv2-feed-item{grid-template-columns:77px minmax(0,1fr) 12px}.bv2-dialog{width:100%;height:100%;animation:bv2-reveal .18s ease-out}.bv2-dialog-body{padding:20px}.bv2-dialog-body h2{font-size:28px}}
 @media(prefers-reduced-motion:reduce){.brief-v2 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media print{.bv2-toolbar,.bv2-filters,.bv2-overlay{display:none!important}.brief-v2{padding:0;max-width:none}.bv2-major-card{break-inside:avoid;min-height:0}.bv2-summary{break-inside:avoid}.bv2-demo{display:block}}
+
+/* Briefing V1 secure draft editor */
+.brief-admin{padding:26px 36px 56px}.brief-admin-layout{display:grid;grid-template-columns:minmax(220px,290px) minmax(0,1fr);gap:20px;align-items:start;margin-top:24px}
+.brief-admin-panel{padding:22px;background:#fff;border:1px solid #dce5df;border-radius:13px;display:grid;gap:13px;min-width:0}
+.brief-admin-panel h2{font-size:22px;margin:0 0 8px}.brief-admin-panel h3{font-size:16px;margin:12px 0 4px}
+.brief-admin-panel form{display:grid;gap:17px}.brief-admin-panel label{display:grid;gap:6px;font-size:13px;font-weight:700;color:#425f4d}
+.brief-admin-panel input,.brief-admin-panel select,.brief-admin-panel textarea{font:inherit;border:1px solid #cbdad0;color:#243e2c;background:white;border-radius:8px;padding:11px;min-width:0;width:100%}.brief-admin-panel textarea{resize:vertical;line-height:1.8;font-weight:400}
+.brief-admin-panel button{font:600 13px var(--font-sas-sans),sans-serif;border:0;border-radius:8px;cursor:pointer;background:#254c36;color:#fff;padding:10px 15px}.brief-admin-panel button:disabled{opacity:.45;cursor:default}
+.brief-admin-panel .brief-admin-edition{display:grid;gap:3px;text-align:right;background:#edf3eb;color:#24503c}.brief-admin-edition small{font-size:11px;color:#6a8171}
+.brief-admin-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}.brief-admin-row label{flex:1;min-width:160px}.brief-admin-item{background:#f6f9f5;border:1px solid #dce6dc;border-radius:9px;padding:15px;display:grid;gap:11px}
+.brief-admin-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.brief-admin-item-head strong{font-size:13px}.brief-admin-panel .brief-admin-item-head button{background:#e7ede6;color:#315944;padding:7px 12px}
+@media(max-width:850px){.brief-admin{padding:18px}.brief-admin-layout{grid-template-columns:1fr}}
