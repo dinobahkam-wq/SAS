@@ -27,3 +27,11 @@ Supabase schema sas holds dossiers, issues, events, developments, sources and de
 - Verify /briefings/preview on the user's shop PC D:\\SAS-WEB and a narrow mobile viewport.
 - Check newspaper hierarchy, readability, contrast, heading wrapping, printed layout, navigation and placeholder disclosure.
 - No merge to main or production database change without approval.
+
+## V2 — Compact interactive preview (2026-10-12)
+- Added a compact, responsive overview with prominent first-screen editorial summary.
+- Three interactive major-change cards and a two-column regional ledger.
+- Client-side region/category/search filters; an accessible slide-over detail dialog with Escape, focus handling and keyboard support.
+- Restrained hover and entry transitions, with reduced-motion support.
+- Entire preview continues to use explicitly fictional data, has no production writes, and is confined to the feature branch.
+- Local `npm run lint` and visual checks on `/briefings/preview` are required before review sign-off; GitHub changes alone do not establish test success.
