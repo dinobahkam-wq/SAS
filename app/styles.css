@@ -274,7 +274,7 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 
 /* V3-A: editorial imagery, continuous ticker and compact accordion */
 .bv3-ticker-area{margin-top:16px}
-.bv3-ticker{display:flex;align-items:stretch;min-width:0;background:#153b2d;color:#f5f8ee;border-radius:10px;overflow:hidden;min-height:79px;border:1px solid #315848;box-shadow:0 7px 20px #1d493011}
+.bv3-ticker{display:flex;align-items:stretch;min-width:0;background:#153b2d;color:#f5f8ee;border-radius:10px;overflow:hidden;min-height:var(--ticker-height,79px);border:1px solid #315848;box-shadow:0 7px 20px #1d493011}
 .bv3-ticker-label{flex:none;display:flex;align-items:center;gap:9px;padding:0 17px;font-size:13px;font-weight:700;border-left:1px solid #3b6450;white-space:nowrap;background:#204a37}
 .bv3-live-dot{width:7px;height:7px;border-radius:50%;background:#9bc594}
 .bv3-ticker-window{min-width:0;flex:1;overflow:hidden;display:flex;align-items:center;direction:rtl}
@@ -308,5 +308,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 @media print{.bv3-ticker{display:none!important}.bv3-acc-body{display:block!important}}
 
 /* Ticker v3 mobile and accessibility overrides */
-@media(max-width:640px){.bv3-ticker{min-height:69px}.bv3-ticker-label{padding:0 10px;font-size:11px}.bv3-ticker-group button{padding:15px 20px}.bv3-ticker-pause,.bv3-ticker-config{min-width:39px}.bv3-ticker-settings{gap:13px}}
+@media(max-width:640px){.bv3-ticker-label{padding:0 10px;font-size:11px}.bv3-ticker-group button{padding:15px 20px}.bv3-ticker-pause,.bv3-ticker-config{min-width:39px}.bv3-ticker-settings{gap:13px}}
 @media(prefers-reduced-motion:reduce){.bv3-ticker-track{animation:none!important;transform:none!important}.bv3-ticker-window{overflow-x:auto}.bv3-ticker-settings{animation:none!important}}
