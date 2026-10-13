@@ -36,11 +36,6 @@ export default function BriefingCompact(){
  const [query,setQuery]=useState('');
  const [showMethod,setShowMethod]=useState(false);
  const [expanded,setExpanded]=useState<string|null>(null);
- const [tickerPaused,setTickerPaused]=useState(false);
- const [tickerSpeed,setTickerSpeed]=useState(3);
- const [tickerFontSize,setTickerFontSize]=useState(23);
- const [tickerHeight,setTickerHeight]=useState(79);
- const [tickerSettings,setTickerSettings]=useState(false);
  const closeRef=useRef<HTMLButtonElement>(null);
  const previousFocus=useRef<HTMLElement|null>(null);
  const regions=['الكل',...Array.from(new Set(ledger.map(x=>x.region)))];
@@ -72,30 +67,14 @@ export default function BriefingCompact(){
    <div className="bv2-heading"><span className="bv2-eyebrow">ساس / موجز التحولات اليومية</span><h1>الإحاطة اليمنية<span className="bv2-dot">.</span></h1><p>ما الذي تغيّر في اليمن، ولماذا يهم؟</p></div>
    <div className="bv2-meta"><strong>العدد التجريبي 001</strong><span>الإثنين، 12 أكتوبر 2026</span><span>نافذة رصد افتراضية: 24 ساعة</span></div>
   </header>
-  <section className="bv3-ticker-area" aria-label="الشريط المتحرك للتحولات">
-   <div className="bv3-ticker" style={{'--ticker-size':tickerFontSize+'px','--ticker-height':tickerHeight+'px','--ticker-duration':(94-tickerSpeed*14)+'s'} as React.CSSProperties}>
-    <span className="bv3-ticker-label"><span className="bv3-live-dot" aria-hidden="true"/>التحولات</span>
-    <div className="bv3-ticker-window"><div className={"bv3-ticker-track"+(tickerPaused?" is-paused":"")}>
-      {[0,1].map(copy=><div key={copy} className="bv3-ticker-group" aria-hidden={copy===1?"true":undefined}>{examples.map((x,i)=><button type="button" key={i} tabIndex={copy===1?-1:0} onClick={()=>open(details[i])}><span aria-hidden="true">◆</span>{x.region} — {x.title}</button>)}</div>)}
-    </div></div>
-    <button type="button" className="bv3-ticker-pause" aria-label={tickerPaused?"استئناف حركة الشريط":"إيقاف حركة الشريط"} aria-pressed={tickerPaused} onClick={()=>setTickerPaused(v=>!v)}>{tickerPaused?"▶":"Ⅱ"}</button>
-    <button type="button" className="bv3-ticker-config" aria-label="التحكم في حجم وسرعة شريط التحولات" aria-expanded={tickerSettings} aria-controls="bv3-ticker-settings" onClick={()=>setTickerSettings(v=>!v)}>⚙</button>
-   </div>
-   {tickerSettings&&<div id="bv3-ticker-settings" className="bv3-ticker-settings">
-    <label>سرعة الحركة <output>{['','بطيئة جدًا','بطيئة','متوسطة','سريعة','سريعة جدًا'][tickerSpeed]}</output><input aria-label="سرعة شريط التحولات" type="range" min="1" max="5" step="1" value={tickerSpeed} onChange={e=>setTickerSpeed(Number(e.target.value))}/></label>
-    <label>حجم الخط <output>{tickerFontSize} بكسل</output><input aria-label="حجم خط شريط التحولات" type="range" min="18" max="32" step="1" value={tickerFontSize} onChange={e=>setTickerFontSize(Number(e.target.value))}/></label>
-    <label>ارتفاع الشريط <output>{tickerHeight} بكسل</output><input aria-label="ارتفاع شريط التحولات" type="range" min="68" max="120" step="2" value={tickerHeight} onChange={e=>setTickerHeight(Number(e.target.value))}/></label>
-    <button type="button" onClick={()=>{setTickerSpeed(3);setTickerFontSize(23);setTickerHeight(79);setTickerPaused(false)}}>إعادة الافتراضي</button>
-   </div>}
-  </section>
   <div className="bv2-toolbar"><div className="bv2-tabs"><a href="#snapshot">في دقيقة</a><a href="#major">التحولات</a><a href="#updates">التطورات</a><a href="#analysis">التحليل</a></div><button type="button" onClick={()=>setShowMethod(v=>!v)} aria-expanded={showMethod} aria-controls="bv2-method">منهجية الانتقاء <span aria-hidden="true">{showMethod?'−':'+'}</span></button></div>
   {showMethod&&<section id="bv2-method" className="bv2-method"><strong>كيف نختار التطورات؟</strong><p>الأثر، والجِدّة، والامتداد، والتوثيق، والاستمرارية. التغطية لا تعني استيعاب كل ما يحدث، وعدم ذكر منطقة لا يثبت غياب تطورات فيها. هذه البيانات تخيّلية بالكامل لأغراض اختبار التصميم.</p></section>}
-  <section id="snapshot" className="bv2-summary">
-   <div className="bv2-summary-main"><span className="bv2-eyebrow">01 / المشهد في دقيقة</span><h2>الخدمات المحلية والخطوات المؤسسية تتصدر المشهد الافتراضي</h2><p>في سيناريو هذا العدد، برزت خطط خيالية للمياه في حضرموت، والنقل في تعز، والإفصاح المالي في عدن. القاسم المشترك هو الانتقال من إعلان النوايا إلى إجراءات يمكن قياسها، دون أدلة بعد على التنفيذ.</p></div>
-   <div className="bv2-summary-aside"><span>الفكرة المحورية</span><strong>الإعلان لا يساوي التنفيذ.</strong><p>نبحث عما تغيّر فعليًا، لا عن كثرة التصريحات.</p><div className="bv2-statline"><span>03 تحولات رئيسية</span><span>08 تطورات أخرى</span></div></div>
+  <section id="snapshot" className="bv4-lead" aria-label="صدر الإحاطة">
+   <div className="bv4-lead-copy"><span className="bv2-eyebrow">المشهد في دقيقة / العدد التجريبي</span><h2>الخدمات المحلية والخطوات المؤسسية تتصدر المشهد الافتراضي</h2><p>برزت في هذه المحاكاة خطط خيالية للمياه والنقل والإفصاح المالي. الفارق الجوهري هو الانتقال من إعلان النوايا إلى إجراءات قابلة للقياس، دون أدلة بعد على التنفيذ.</p><div className="bv4-lead-bottom"><span>11 تطورًا توضيحيًا في هذا العدد</span><strong>الإعلان لا يساوي التنفيذ.</strong></div></div>
+   <button type="button" className="bv4-hero" onClick={()=>open(details[0])} aria-label={'عرض التفاصيل: '+examples[0].title}><img src={media[0].url} alt={media[0].alt} /><span className="bv4-image-label">صورة تعبيرية · ليست من اليمن</span><span className="bv4-hero-overlay"><span>التحول الأبرز · حضرموت</span><strong>{examples[0].title}</strong><span>قراءة التفاصيل ←</span></span></button>
   </section>
-  <section id="major" className="bv2-block"><header className="bv2-section-head"><div><span className="bv2-eyebrow">02 / الأكثر تأثيرًا</span><h2>التحولات الرئيسية</h2></div><span>انقر على أي بطاقة لفتح التفاصيل</span></header>
-   <div className="bv2-major-grid">{examples.map((x,i)=><button key={x.title} className="bv2-major-card" type="button" onClick={()=>open(details[i])} aria-label={'تفاصيل: '+x.title}><div className="bv3-card-image"><img src={media[i].url} alt={media[i].alt} loading="lazy" referrerPolicy="no-referrer" /><span>صورة تعبيرية</span></div><div className="bv2-card-top"><span className="bv2-index">{String(i+1).padStart(2,'0')}</span><span className="bv2-chip">{x.region} · {x.category}</span></div><h3>{x.title}</h3><p>{x.change}</p><div className="bv2-card-foot"><span>تحول رئيسي · افتراضي</span><span aria-hidden="true">↗</span></div></button>)}</div>
+  <section id="major" className="bv2-block bv4-major"><header className="bv2-section-head"><div><span className="bv2-eyebrow">01 / أكثر ما تغيّر</span><h2>التحولات الرئيسية</h2></div><span>عناوين موجزة وتفاصيل بنقرة واحدة</span></header>
+   <div className="bv4-major-grid">{examples.slice(1).map((x,i)=><button key={x.title} type="button" className="bv4-story" onClick={()=>open(details[i+1])} aria-label={'تفاصيل: '+x.title}><div className="bv4-story-photo"><img src={media[i+1].url} alt={media[i+1].alt} loading="lazy"/><span>تعبيرية</span></div><div className="bv4-story-text"><span className="bv2-eyebrow">{x.region} / {x.category}</span><h3>{x.title}</h3><p>{x.change}</p><span className="bv4-more">التفاصيل والسياق ←</span></div></button>)}</div>
   </section>
   <section id="updates" className="bv2-block"><header className="bv2-section-head"><div><span className="bv2-eyebrow">03 / سجل اليوم</span><h2>التطورات عبر المناطق</h2></div><span>{filtered.length} من أصل {ledger.length} تطورات افتراضية</span></header>
    <div className="bv2-filters"><label>المحافظة <select value={region} onChange={e=>setRegion(e.target.value)}>{regions.map(x=><option key={x}>{x}</option>)}</select></label><label>المجال <select value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(x=><option key={x}>{x}</option>)}</select></label><label className="bv2-search">بحث<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="ابحث في سجل اليوم"/></label>{(region!=='الكل'||category!=='الكل'||query)&&<button type="button" className="bv2-clear" onClick={()=>{setRegion('الكل');setCategory('الكل');setQuery('')}}>مسح التصفية</button>}</div>
