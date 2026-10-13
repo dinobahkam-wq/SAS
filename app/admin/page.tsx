@@ -181,6 +181,7 @@ export default function Admin(){
  return <main className="admin-page">
  <div className="knowledge-breadcrumb"><Link href="/">الرئيسية</Link><span>←</span><strong>إدارة المحتوى</strong></div>
  <p className="studio-note"><Link href="/admin/briefings">فتح محرر الإحاطة اليومية (المسودات) ←</Link></p>
+ <p className="studio-note"><Link href="/admin/media">مكتبة وسائط ساس — رفع الصور وحقوق استخدامها ←</Link></p>
  <div className="admin-heading"><div><span className="eyebrow">مساحة الفريق</span><h1>إدارة محتوى ساس</h1><p>إنشاء المسودات والنشر والتعديل والسحب وإدارة العلاقات والتطورات.</p></div>{session&&<button type="button" onClick={logout}>تسجيل الخروج</button>}</div>
  {!db?<section className="admin-panel"><h2>إعداد الاتصال مطلوب</h2><p>أضف عنوان Supabase والمفتاح العام إلى ملف البيئة المحلي ثم أعد تشغيل الخادم.</p></section>
  :!session?<form className="admin-panel admin-login" onSubmit={login}><h2>دخول أعضاء الفريق</h2><p>حسابات العاملين المعتمدين فقط؛ لا يتاح التسجيل الذاتي من هذه الصفحة.</p><label>البريد الإلكتروني<input type="email" required autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>كلمة المرور<input type="password" required autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></label><button type="submit" disabled={busy}>دخول</button>{message&&<p role="alert" className="admin-feedback">{message}</p>}</form>
