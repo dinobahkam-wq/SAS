@@ -194,7 +194,7 @@ function newsGeometry(cfg:Config,ctx:CanvasRenderingContext2D,top:number,bottom:
   if(maxWidth<95)return null;
   let line='';
   while(words.length){
-   const word=words[0],candidate=line?line+' '+word:word;
+   const word=words[0]??'';if(!word){words.shift();continue}const candidate=line?line+' '+word:word;
    if(ctx.measureText(candidate).width<=maxWidth){line=candidate;words.shift();continue}
    if(line)break;
    const chars=Array.from(word);let used=0,chunk='';
