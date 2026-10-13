@@ -39,6 +39,7 @@ export default function BriefingCompact(){
  const [tickerPaused,setTickerPaused]=useState(false);
  const [tickerSpeed,setTickerSpeed]=useState(3);
  const [tickerFontSize,setTickerFontSize]=useState(23);
+ const [tickerHeight,setTickerHeight]=useState(79);
  const [tickerSettings,setTickerSettings]=useState(false);
  const closeRef=useRef<HTMLButtonElement>(null);
  const previousFocus=useRef<HTMLElement|null>(null);
@@ -72,7 +73,7 @@ export default function BriefingCompact(){
    <div className="bv2-meta"><strong>العدد التجريبي 001</strong><span>الإثنين، 12 أكتوبر 2026</span><span>نافذة رصد افتراضية: 24 ساعة</span></div>
   </header>
   <section className="bv3-ticker-area" aria-label="الشريط المتحرك للتحولات">
-   <div className="bv3-ticker" style={{'--ticker-size':tickerFontSize+'px','--ticker-duration':(94-tickerSpeed*14)+'s'} as React.CSSProperties}>
+   <div className="bv3-ticker" style={{'--ticker-size':tickerFontSize+'px','--ticker-height':tickerHeight+'px','--ticker-duration':(94-tickerSpeed*14)+'s'} as React.CSSProperties}>
     <span className="bv3-ticker-label"><span className="bv3-live-dot" aria-hidden="true"/>التحولات</span>
     <div className="bv3-ticker-window"><div className={"bv3-ticker-track"+(tickerPaused?" is-paused":"")}>
       {[0,1].map(copy=><div key={copy} className="bv3-ticker-group" aria-hidden={copy===1?"true":undefined}>{examples.map((x,i)=><button type="button" key={i} tabIndex={copy===1?-1:0} onClick={()=>open(details[i])}><span aria-hidden="true">◆</span>{x.region} — {x.title}</button>)}</div>)}
@@ -83,7 +84,8 @@ export default function BriefingCompact(){
    {tickerSettings&&<div id="bv3-ticker-settings" className="bv3-ticker-settings">
     <label>سرعة الحركة <output>{['','بطيئة جدًا','بطيئة','متوسطة','سريعة','سريعة جدًا'][tickerSpeed]}</output><input aria-label="سرعة شريط التحولات" type="range" min="1" max="5" step="1" value={tickerSpeed} onChange={e=>setTickerSpeed(Number(e.target.value))}/></label>
     <label>حجم الخط <output>{tickerFontSize} بكسل</output><input aria-label="حجم خط شريط التحولات" type="range" min="18" max="32" step="1" value={tickerFontSize} onChange={e=>setTickerFontSize(Number(e.target.value))}/></label>
-    <button type="button" onClick={()=>{setTickerSpeed(3);setTickerFontSize(23);setTickerPaused(false)}}>إعادة الافتراضي</button>
+    <label>ارتفاع الشريط <output>{tickerHeight} بكسل</output><input aria-label="ارتفاع شريط التحولات" type="range" min="68" max="120" step="2" value={tickerHeight} onChange={e=>setTickerHeight(Number(e.target.value))}/></label>
+    <button type="button" onClick={()=>{setTickerSpeed(3);setTickerFontSize(23);setTickerHeight(79);setTickerPaused(false)}}>إعادة الافتراضي</button>
    </div>}
   </section>
   <div className="bv2-toolbar"><div className="bv2-tabs"><a href="#snapshot">في دقيقة</a><a href="#major">التحولات</a><a href="#updates">التطورات</a><a href="#analysis">التحليل</a></div><button type="button" onClick={()=>setShowMethod(v=>!v)} aria-expanded={showMethod} aria-controls="bv2-method">منهجية الانتقاء <span aria-hidden="true">{showMethod?'−':'+'}</span></button></div>
