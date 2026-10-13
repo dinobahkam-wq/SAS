@@ -397,3 +397,5 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .studio-options details input[type=range]{width:100%}
 .studio-options button{font-size:13px}
 .studio-fields .studio-options .studio-note{margin:0}
+
+.sas-media-render-actions{display:flex;gap:9px;flex-wrap:wrap}.sas-media-render-actions button{flex:1;min-width:140px}.sas-media-preview-image{display:block;width:100%;max-height:480px;object-fit:contain;background:#e9eeea;border:1px solid #dce5dd;border-radius:8px}
