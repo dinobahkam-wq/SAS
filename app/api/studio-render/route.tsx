@@ -52,8 +52,9 @@ export async function POST(request:Request){
   const {data:{user},error:userError}=await db.auth.getUser(token);
   if(userError||!user)return Response.json({error:'جلسة غير صالحة'}, {status:401});
   // Authorization is enforced by existing editor-only RPC; never rely on JWT alone.
-  const {error:roleError}=await db.rpc('sas_media_editor_list');
-  if(roleError)return Response.json({error:'حساب غير مخول للوصول إلى المكتبة'}, {status:403});
+  const {data:overview,error:roleError}=await db.rpc('sas_admin_overview');
+  const role=(overview as {role?:string}|null)?.role;
+  if(roleError||!['admin','editor'].includes(role||''))return Response.json({error:'يتطلب إنشاء البطاقة صلاحية مدير أو محرر'}, {status:403});
   const card=parse(await request.json());
   const bytes=await image(card);
   if(card.operation==='preview')return new Response(new Uint8Array(bytes),{headers:{'Content-Type':'image/png','Cache-Control':'no-store','Content-Disposition':'inline; filename="sas-card.png"'}});
