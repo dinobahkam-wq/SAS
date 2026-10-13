@@ -37,6 +37,9 @@ export default function BriefingCompact(){
  const [showMethod,setShowMethod]=useState(false);
  const [expanded,setExpanded]=useState<string|null>(null);
  const [tickerPaused,setTickerPaused]=useState(false);
+ const [tickerSpeed,setTickerSpeed]=useState(3);
+ const [tickerFontSize,setTickerFontSize]=useState(23);
+ const [tickerSettings,setTickerSettings]=useState(false);
  const closeRef=useRef<HTMLButtonElement>(null);
  const previousFocus=useRef<HTMLElement|null>(null);
  const regions=['الكل',...Array.from(new Set(ledger.map(x=>x.region)))];
@@ -68,7 +71,21 @@ export default function BriefingCompact(){
    <div className="bv2-heading"><span className="bv2-eyebrow">ساس / موجز التحولات اليومية</span><h1>الإحاطة اليمنية<span className="bv2-dot">.</span></h1><p>ما الذي تغيّر في اليمن، ولماذا يهم؟</p></div>
    <div className="bv2-meta"><strong>العدد التجريبي 001</strong><span>الإثنين، 12 أكتوبر 2026</span><span>نافذة رصد افتراضية: 24 ساعة</span></div>
   </header>
-  <div className="bv3-ticker" aria-label="شريط التطورات التجريبي"><span className="bv3-ticker-label"><span className="bv3-live-dot" aria-hidden="true"/> شريط التحولات</span><div className="bv3-ticker-window" onMouseEnter={()=>setTickerPaused(true)} onMouseLeave={()=>setTickerPaused(false)} onFocusCapture={()=>setTickerPaused(true)} onBlurCapture={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setTickerPaused(false)}}><div className={"bv3-ticker-track"+(tickerPaused?" is-paused":"")}>{[...examples,...examples].map((x,i)=><button type="button" key={i} onClick={()=>open(details[i%examples.length])} tabIndex={i>=examples.length?-1:0}><span aria-hidden="true">◆</span>{x.region} — {x.title}</button>)}</div></div><button type="button" className="bv3-ticker-pause" aria-label={tickerPaused?"تشغيل حركة الشريط":"إيقاف حركة الشريط"} aria-pressed={tickerPaused} onClick={()=>setTickerPaused(v=>!v)}>{tickerPaused?"▶":"Ⅱ"}</button></div>
+  <section className="bv3-ticker-area" aria-label="الشريط المتحرك للتحولات">
+   <div className="bv3-ticker" style={{'--ticker-size':tickerFontSize+'px','--ticker-duration':(94-tickerSpeed*14)+'s'} as React.CSSProperties}>
+    <span className="bv3-ticker-label"><span className="bv3-live-dot" aria-hidden="true"/>التحولات</span>
+    <div className="bv3-ticker-window"><div className={"bv3-ticker-track"+(tickerPaused?" is-paused":"")}>
+      {[0,1].map(copy=><div key={copy} className="bv3-ticker-group" aria-hidden={copy===1?"true":undefined}>{examples.map((x,i)=><button type="button" key={i} tabIndex={copy===1?-1:0} onClick={()=>open(details[i])}><span aria-hidden="true">◆</span>{x.region} — {x.title}</button>)}</div>)}
+    </div></div>
+    <button type="button" className="bv3-ticker-pause" aria-label={tickerPaused?"استئناف حركة الشريط":"إيقاف حركة الشريط"} aria-pressed={tickerPaused} onClick={()=>setTickerPaused(v=>!v)}>{tickerPaused?"▶":"Ⅱ"}</button>
+    <button type="button" className="bv3-ticker-config" aria-label="التحكم في حجم وسرعة شريط التحولات" aria-expanded={tickerSettings} aria-controls="bv3-ticker-settings" onClick={()=>setTickerSettings(v=>!v)}>⚙</button>
+   </div>
+   {tickerSettings&&<div id="bv3-ticker-settings" className="bv3-ticker-settings">
+    <label>سرعة الحركة <output>{['','بطيئة جدًا','بطيئة','متوسطة','سريعة','سريعة جدًا'][tickerSpeed]}</output><input aria-label="سرعة شريط التحولات" type="range" min="1" max="5" step="1" value={tickerSpeed} onChange={e=>setTickerSpeed(Number(e.target.value))}/></label>
+    <label>حجم الخط <output>{tickerFontSize} بكسل</output><input aria-label="حجم خط شريط التحولات" type="range" min="18" max="32" step="1" value={tickerFontSize} onChange={e=>setTickerFontSize(Number(e.target.value))}/></label>
+    <button type="button" onClick={()=>{setTickerSpeed(3);setTickerFontSize(23);setTickerPaused(false)}}>إعادة الافتراضي</button>
+   </div>}
+  </section>
   <div className="bv2-toolbar"><div className="bv2-tabs"><a href="#snapshot">في دقيقة</a><a href="#major">التحولات</a><a href="#updates">التطورات</a><a href="#analysis">التحليل</a></div><button type="button" onClick={()=>setShowMethod(v=>!v)} aria-expanded={showMethod} aria-controls="bv2-method">منهجية الانتقاء <span aria-hidden="true">{showMethod?'−':'+'}</span></button></div>
   {showMethod&&<section id="bv2-method" className="bv2-method"><strong>كيف نختار التطورات؟</strong><p>الأثر، والجِدّة، والامتداد، والتوثيق، والاستمرارية. التغطية لا تعني استيعاب كل ما يحدث، وعدم ذكر منطقة لا يثبت غياب تطورات فيها. هذه البيانات تخيّلية بالكامل لأغراض اختبار التصميم.</p></section>}
   <section id="snapshot" className="bv2-summary">
