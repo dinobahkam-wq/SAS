@@ -25,3 +25,6 @@ npm run lint
 npm run dev
 ```
 Visit `http://127.0.0.1:3000/briefings/preview`.
+
+## Editorial layout revision — no ticker (2026-10-13)
+Following mobile review, the moving ticker and its configuration UI were removed from the preview. The page now emphasizes a single large illustrative-photo lead, a compact contextual briefing summary, and two subordinate photo stories, inspired by the editorial hierarchy seen on the BBC News homepage (not a reproduction). Accordion and detail drawer stay in place. Existing illustrative third-party image links remain preview-only; production licensing/provenance review is pending. Local TypeScript, mobile and image-loading checks remain required.
