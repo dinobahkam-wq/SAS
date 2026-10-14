@@ -399,3 +399,16 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .studio-fields .studio-options .studio-note{margin:0}
 
 .sas-media-render-actions{display:flex;gap:9px;flex-wrap:wrap}.sas-media-render-actions button{flex:1;min-width:140px}.sas-media-preview-image{display:block;width:100%;max-height:480px;object-fit:contain;background:#e9eeea;border:1px solid #dce5dd;border-radius:8px}
+
+
+/* Editorial news feed: distinct articles, readable lead paragraphs, attributed sources. */
+.sas-news-feed{display:flex;flex-direction:column;gap:0}
+.sas-news-item{padding:26px 0 30px;border-bottom:1px solid var(--border,#d9dfd8)}
+.sas-news-item:first-child{padding-top:14px}
+.sas-news-meta{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.sas-news-item h3{font-size:clamp(1.25rem,2.5vw,1.7rem);line-height:1.55;font-weight:650;margin:0 0 12px}
+.sas-news-body{font-size:1.06rem;line-height:2.05;white-space:pre-line;max-width:76ch;margin:0}
+.sas-news-sources{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:17px;font-size:.86rem}
+.sas-news-sources span{font-weight:650;color:var(--muted,#66776d)}
+.sas-news-sources a{text-decoration:underline;text-underline-offset:4px}
+@media(max-width:640px){.sas-news-item{padding:20px 0 24px}.sas-news-body{font-size:1rem;line-height:1.9}}
