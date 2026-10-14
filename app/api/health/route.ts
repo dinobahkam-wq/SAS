@@ -11,7 +11,7 @@ export async function GET(){
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),6000);
   try{
-   const url=endpoint.replace(/\\/$/,'')+'/rest/v1/rpc/sas_public_directory';
+   const url=endpoint.replace(/\/$/,'')+'/rest/v1/rpc/sas_public_directory';
    const upstream=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':key,'Authorization':'Bearer '+key},body:JSON.stringify({p_kind:'dossiers'}),cache:'no-store',signal:controller.signal});
    if(!upstream.ok)return Response.json({service:'sas',status:'degraded',database:'unavailable'},{status:503,headers});
    const body:unknown=await upstream.json();
