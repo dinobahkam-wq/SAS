@@ -23,9 +23,22 @@ export default function OwnerReview(){
   else {const reply=data as {approved?:boolean;problems?:string[]};setMessage(reply.approved?'اعتمد المدير هذه النسخة وسُجّل القرار، ولم يتم نشرها بعد.':(reply.problems?.length?'متطلبات ناقصة: '+reply.problems.join('، '):'أعيدت المسودة للتحرير'))}
   setBusy(false);await load(eventId);
  }
+ async function publish(item:RecordItem){
+  if(!db||busy||role!=='admin')return;
+  setBusy(true);setMessage('');
+  const check=await db.rpc('sas_owner_publication_check',{p_id:item.id});
+  if(check.error){setMessage('تعذر فحص النشر: '+check.error.message);setBusy(false);return}
+  const result=check.data as {ready:boolean;problems?:string[]};
+  if(!result.ready){setMessage('النشر غير جاهز: '+(result.problems||[]).join('، '));setBusy(false);return}
+  if(!window.confirm('نشر هذا التطور المعتمد الآن للجمهور؟')){setBusy(false);return}
+  const answer=await db.rpc('sas_owner_publish_development',{p_id:item.id});
+  if(answer.error)setMessage('فشل النشر: '+answer.error.message);
+  else {const output=answer.data as {published?:boolean;problems?:string[]};setMessage(output.published?'نُشر التطور المعتمد في قاعدة ساس؛ راجع واجهة الحدث العامة.':'تعذر النشر: '+(output.problems||[]).join('، '))}
+  setBusy(false);await load(eventId);
+ }
  return <main className="knowledge-page"><div className="knowledge-breadcrumb"><Link href="/admin">الإدارة</Link><span>←</span><strong>الاعتماد التحريري</strong></div><header className="knowledge-hero"><h1>اعتماد مدير ساس</h1><p>راجع المادة والمصادر وتاريخها قبل اتخاذ القرار. الاعتماد مرتبط بإصدار محدد، ولا ينشر المادة تلقائيًا.</p></header>
  {role!=='admin'?<p>يرجى تسجيل الدخول من لوحة الإدارة بحساب مدير ساس.</p>:<section className="knowledge-primary"><label>الحدث <select value={eventId} onChange={e=>void load(e.target.value)}><option value="">اختر الحدث</option>{events.map(e=><option key={e.id} value={e.id}>{e.title}</option>)}</select></label>
  {message&&<p role="status">{message}</p>}
- {items.map(item=><article className="sas-news-item" key={item.id}><h2>{item.headline}</h2>{item.occurred_at&&<time dir="ltr">{item.occurred_at}</time>}<p className="sas-news-body">{item.description}</p><p><strong>المصادر</strong></p>{item.sources?.map(s=><p key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a></p>)}<small>إصدار المسودة: {item.updated_at}</small><div style={{display:'flex',gap:12,marginTop:16}}><button disabled={busy} type="button" onClick={()=>void decide(item,'approve')}>اعتماد هذه النسخة</button><button disabled={busy} type="button" onClick={()=>void decide(item,'return')}>إعادة للتحرير</button></div></article>)}
+ {items.map(item=><article className="sas-news-item" key={item.id}><h2>{item.headline}</h2>{item.occurred_at&&<time dir="ltr">{item.occurred_at}</time>}<p className="sas-news-body">{item.description}</p><p><strong>المصادر</strong></p>{item.sources?.map(s=><p key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a></p>)}<small>إصدار المسودة: {item.updated_at}</small><div style={{display:'flex',gap:12,marginTop:16}}>{item.editorial_status!=='approved'?<button disabled={busy} type="button" onClick={()=>void decide(item,'approve')}>اعتماد هذه النسخة</button>:<button disabled={busy} type="button" onClick={()=>void publish(item)}>نشر النسخة المعتمدة</button>}{item.editorial_status!=='approved'&&<button disabled={busy} type="button" onClick={()=>void decide(item,'return')}>إعادة للتحرير</button>}</div></article>)}
  </section>}</main>;
 }
