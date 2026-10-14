@@ -1,0 +1,12 @@
+-- Fix media registration INSERT column/value mismatch.
+-- Apply to the existing sas_media_register function definition from
+-- docs/database/sas_media_editor_rpc_v1.sql: keep all its validation and
+-- authorization checks unchanged, and replace only the VALUES line:
+--
+-- BEFORE:
+-- values(p_storage_path,p_original_filename,p_mime_type,p_byte_size,p_alt_ar,coalesce(p_caption_ar,''),p_source_name,p_source_url,p_license_name,p_license_url,p_creator_name,coalesce(p_media_kind,'archival'))
+--
+-- AFTER:
+-- values(p_storage_path,p_original_filename,p_mime_type,p_byte_size,p_alt_ar,coalesce(p_caption_ar,''),p_source_name,p_source_url,p_license_name,p_license_url,p_creator_name,coalesce(p_media_kind,'archival'),auth.uid())
+--
+-- created_by remains tied to the authenticated uploader.
