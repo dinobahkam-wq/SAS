@@ -11,6 +11,11 @@ const mediaTool={name:'sas_render_card',description:'Create a verified-auth SAS 
  source_name:{type:'string'},source_url:{type:'string',format:'uri'},license_name:{type:'string'},creator_name:{type:'string'},caption:{type:'string'},date:{type:'string'}
  },required:['title','source_name','license_name'],additionalProperties:false}};
 const linkTool={name:'sas_link_draft_media',description:'Attach a previously saved media asset to exactly one SAS draft item: briefing, event, or development. Does not publish the item or image.',inputSchema:{type:'object',properties:{asset_id:{type:'string',format:'uuid'},edition_id:{type:'string',format:'uuid'},event_id:{type:'string',format:'uuid'},development_id:{type:'string',format:'uuid'},display_role:{type:'string',enum:['hero','card','gallery','document']},position:{type:'integer',minimum:1}},required:['asset_id','display_role'],additionalProperties:false}};
+const approvalTools=[
+ {name:'sas_review_events',description:'Read owner event review queue without publication.',inputSchema:{type:'object',properties:{},additionalProperties:false}},
+ {name:'sas_review_developments',description:'Read exact draft versions for a given event.',inputSchema:{type:'object',properties:{event_id:{type:'string'}},required:['event_id'],additionalProperties:false}},
+ {name:'sas_check_development',description:'Read exact publication blockers for one development.',inputSchema:{type:'object',properties:{development_id:{type:'string'}},required:['development_id'],additionalProperties:false}}
+];
 const readTools=[
  {name:'sas_read_overview',description:'Read live SAS dossiers, issues, events and the current editorial role from Supabase; never invent records.',inputSchema:{type:'object',properties:{},additionalProperties:false}},
  {name:'sas_read_briefings',description:'Read editorial briefing editions, including draft status, from Supabase; authorized editorial staff only.',inputSchema:{type:'object',properties:{},additionalProperties:false}},
@@ -48,7 +53,7 @@ export async function POST(req:Request){
  if(call.method==='initialize')return response(id,{protocolVersion:'2025-06-18',capabilities:{tools:{}},serverInfo:{name:'sas-editorial-operator',version:'0.1.0'}});
  if(call.method==='notifications/initialized')return new Response(null,{status:202});
  if(call.method==='ping')return response(id,{});
- if(call.method==='tools/list')return response(id,{tools:[...readTools,mediaTool,linkTool]});
+ if(call.method==='tools/list')return response(id,{tools:[...readTools,...approvalTools,mediaTool,linkTool]});
  if(call.method!=='tools/call')return rpcError(id,-32601,'Method not found');
  const name=asString(call.params?.name),args=call.params?.arguments as Record<string,unknown>|undefined;
  if(!args||typeof args!=='object'||Array.isArray(args))return rpcError(id,-32602,'Tool arguments required');
@@ -71,6 +76,16 @@ export async function POST(req:Request){
   const read=await db.rpc(command.rpc,command.arguments(args));
   if(read.error)return failTool(id,read.error.message);
   return response(id,{content:[{type:'text',text:JSON.stringify({source:'supabase',tool:name,records:read.data})}]});
+ }
+ if(name==='sas_review_events'||name==='sas_review_developments'||name==='sas_check_development'){
+  if(role!=='admin')return failTool(id,'Admin access required');
+  if(name==='sas_review_developments'&&!validId(args.event_id))return failTool(id,'Valid event_id required');
+  if(name==='sas_check_development'&&!validId(args.development_id))return failTool(id,'Valid development_id required');
+  const fn=name==='sas_review_events'?'sas_owner_event_review_packet':name==='sas_review_developments'?'sas_owner_review_packet':'sas_owner_publication_check';
+  const params=name==='sas_review_developments'?{p_event_id:args.event_id}:name==='sas_check_development'?{p_id:args.development_id}:{};
+  const result=await db.rpc(fn,params);
+  if(result.error)return failTool(id,result.error.message);
+  return response(id,{content:[{type:'text',text:JSON.stringify(result.data)}]});
  }
  if(name==='sas_render_card'){
   if(hasExtraKeys(args,['title','summary','format','theme','operation','source_name','source_url','license_name','creator_name','caption','date']))return failTool(id,'Unexpected card input field.');
