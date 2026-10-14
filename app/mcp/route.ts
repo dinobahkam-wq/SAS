@@ -17,6 +17,8 @@ const readTools=[
  {name:'sas_read_media',description:'Read private SAS media registry metadata, rights verification and source information, not public image URLs.',inputSchema:{type:'object',properties:{},additionalProperties:false}},
  {name:'sas_read_draft',description:'Read one live SAS dossier, issue or event draft record by UUID.',inputSchema:{type:'object',properties:{kind:{type:'string',enum:['dossiers','issues','events']},id:{type:'string',format:'uuid'}},required:['kind','id'],additionalProperties:false}},
  {name:'sas_read_event_developments',description:'Read the recorded developments associated with an event UUID, including their editorial state.',inputSchema:{type:'object',properties:{event_id:{type:'string',format:'uuid'}},required:['event_id'],additionalProperties:false}}
+ ,{name:'sas_read_publication_queue',description:'Read live editorial publication queue, without changing publication state.',inputSchema:{type:'object',properties:{},additionalProperties:false}}
+ ,{name:'sas_read_publication_check',description:'Inspect exact publication blockers for one development. Requires administrator role.',inputSchema:{type:'object',properties:{development_id:{type:'string',format:'uuid'}},required:['development_id'],additionalProperties:false}}
 ];
 function response(id:Rpc['id'],result:unknown){return Response.json({jsonrpc:'2.0',id,result},{headers:{'Cache-Control':'no-store'}})}
 function rpcError(id:Rpc['id'],code:number,message:string){return Response.json({jsonrpc:'2.0',id,error:{code,message}},{headers:{'Cache-Control':'no-store'}})}
@@ -56,12 +58,15 @@ export async function POST(req:Request){
    sas_read_briefings:{rpc:'sas_briefing_admin_list',allowed:[],arguments:()=>({})},
    sas_read_media:{rpc:'sas_media_editor_list',allowed:[],arguments:()=>({})},
    sas_read_draft:{rpc:'sas_admin_draft_details',allowed:['kind','id'],arguments:x=>({p_kind:x.kind,p_id:x.id})},
-   sas_read_event_developments:{rpc:'sas_admin_event_developments',allowed:['event_id'],arguments:x=>({p_event_id:x.event_id})}
+   sas_read_event_developments:{rpc:'sas_admin_event_developments',allowed:['event_id'],arguments:x=>({p_event_id:x.event_id})},
+   sas_read_publication_queue:{rpc:'sas_admin_publication_queue',allowed:[],arguments:()=>({})},
+   sas_read_publication_check:{rpc:'sas_publication_check',allowed:['development_id'],arguments:x=>({p_id:x.development_id})}
   };
   const command=commands[name];
   if(!command)return rpcError(id,-32602,'Unknown read tool');
   if(hasExtraKeys(args,command.allowed))return failTool(id,'Unexpected argument');
   if(name==='sas_read_draft'&&(!['dossiers','issues','events'].includes(asString(args.kind))||!validId(args.id)))return failTool(id,'Invalid kind or record ID');
+  if(name==='sas_read_publication_check'&&!validId(args.development_id))return failTool(id,'Invalid development ID');
   if(name==='sas_read_event_developments'&&!validId(args.event_id))return failTool(id,'Invalid event ID');
   const read=await db.rpc(command.rpc,command.arguments(args));
   if(read.error)return failTool(id,read.error.message);
