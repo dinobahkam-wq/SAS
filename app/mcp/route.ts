@@ -42,13 +42,13 @@ export async function POST(req:Request){
  const declaredSize=Number(req.headers.get('content-length')||0);
  if(declaredSize>MAX_BODY_BYTES)return Response.json({error:'request too large'},{status:413});
  const auth=req.headers.get('authorization')||'';
- if(!/^Bearer\s+\S+$/i.test(auth))return Response.json({error:'unauthorized'},{status:401});
+ if(!/^Bearer\s+\S+$/i.test(auth)){const u=new URL(req.url);return Response.json({error:'unauthorized'},{status:401,headers:{'WWW-Authenticate':`Bearer resource_metadata="${u.origin}/.well-known/oauth-protected-resource", scope="openid email"`}})}
  const token=auth.replace(/^Bearer\s+/i,'');
  const base=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
  if(!base||!key)return Response.json({error:'server not configured'},{status:503});
  const db=createClient(base,key,{global:{headers:{Authorization:'Bearer '+token}},auth:{persistSession:false,autoRefreshToken:false}});
  const {data:{user},error:authError}=await db.auth.getUser(token);
- if(authError||!user)return Response.json({error:'unauthorized'},{status:401});
+ if(authError||!user){const u=new URL(req.url);return Response.json({error:'unauthorized'},{status:401,headers:{'WWW-Authenticate':`Bearer resource_metadata="${u.origin}/.well-known/oauth-protected-resource", scope="openid email"`}})}
  const {data:overview,error:teamError}=await db.rpc('sas_admin_overview');
  const role=(overview as {role?:string}|null)?.role;
  if(teamError||!['admin','editor'].includes(role||''))return Response.json({error:'forbidden'},{status:403});
