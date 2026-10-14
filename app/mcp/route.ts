@@ -11,6 +11,12 @@ const mediaTool={name:'sas_render_card',description:'Create a verified-auth SAS 
  source_name:{type:'string'},source_url:{type:'string',format:'uri'},license_name:{type:'string'},creator_name:{type:'string'},caption:{type:'string'},date:{type:'string'}
  },required:['title','source_name','license_name'],additionalProperties:false}};
 const linkTool={name:'sas_link_draft_media',description:'Attach a previously saved media asset to exactly one SAS draft item: briefing, event, or development. Does not publish the item or image.',inputSchema:{type:'object',properties:{asset_id:{type:'string',format:'uuid'},edition_id:{type:'string',format:'uuid'},event_id:{type:'string',format:'uuid'},development_id:{type:'string',format:'uuid'},display_role:{type:'string',enum:['hero','card','gallery','document']},position:{type:'integer',minimum:1}},required:['asset_id','display_role'],additionalProperties:false}};
+const writeTools=[
+ {name:'sas_approve_event',description:'Approve one exact reviewed event version with authenticated administrator identity, only following explicit human approval.',inputSchema:{type:'object',properties:{event_id:{type:'string'},expected_updated_at:{type:'string'}},required:['event_id','expected_updated_at'],additionalProperties:false}},
+ {name:'sas_publish_event',description:'Publish one explicitly approved verified event. Never implies factual verification.',inputSchema:{type:'object',properties:{event_id:{type:'string'}},required:['event_id'],additionalProperties:false}},
+ {name:'sas_approve_development',description:'Approve a specific development version after explicit human review.',inputSchema:{type:'object',properties:{development_id:{type:'string'},expected_updated_at:{type:'string'}},required:['development_id','expected_updated_at'],additionalProperties:false}},
+ {name:'sas_publish_development',description:'Publish a specific previously approved development after readiness checks.',inputSchema:{type:'object',properties:{development_id:{type:'string'}},required:['development_id'],additionalProperties:false}}
+];
 const approvalTools=[
  {name:'sas_review_events',description:'Read owner event review queue without publication.',inputSchema:{type:'object',properties:{},additionalProperties:false}},
  {name:'sas_review_developments',description:'Read exact draft versions for a given event.',inputSchema:{type:'object',properties:{event_id:{type:'string'}},required:['event_id'],additionalProperties:false}},
@@ -53,7 +59,7 @@ export async function POST(req:Request){
  if(call.method==='initialize')return response(id,{protocolVersion:'2025-06-18',capabilities:{tools:{}},serverInfo:{name:'sas-editorial-operator',version:'0.1.0'}});
  if(call.method==='notifications/initialized')return new Response(null,{status:202});
  if(call.method==='ping')return response(id,{});
- if(call.method==='tools/list')return response(id,{tools:[...readTools,...approvalTools,mediaTool,linkTool]});
+ if(call.method==='tools/list')return response(id,{tools:[...readTools,...approvalTools,...writeTools,mediaTool,linkTool]});
  if(call.method!=='tools/call')return rpcError(id,-32601,'Method not found');
  const name=asString(call.params?.name),args=call.params?.arguments as Record<string,unknown>|undefined;
  if(!args||typeof args!=='object'||Array.isArray(args))return rpcError(id,-32602,'Tool arguments required');
@@ -76,6 +82,22 @@ export async function POST(req:Request){
   const read=await db.rpc(command.rpc,command.arguments(args));
   if(read.error)return failTool(id,read.error.message);
   return response(id,{content:[{type:'text',text:JSON.stringify({source:'supabase',tool:name,records:read.data})}]});
+ }
+ if(writeTools.some(tool=>tool.name===name)){
+  if(role!=='admin')return failTool(id,'Admin access required');
+  const isEvent=name.endsWith('_event'),key=isEvent?'event_id':'development_id';
+  if(!validId(args[key]))return failTool(id,'Invalid target ID');
+  const approving=name.startsWith('sas_approve_');
+  if(approving&&(typeof args.expected_updated_at!=='string'||Number.isNaN(Date.parse(args.expected_updated_at))))return failTool(id,'Expected version timestamp required');
+  const allowed=approving?[key,'expected_updated_at']:[key];
+  if(hasExtraKeys(args,allowed))return failTool(id,'Unexpected argument');
+  const rpc=name==='sas_approve_event'?'sas_owner_approve_event':name==='sas_publish_event'?'sas_owner_publish_event':name==='sas_approve_development'?'sas_owner_review_development':'sas_owner_publish_development';
+  const params=name==='sas_approve_event'?{p_id:args.event_id,p_expected_updated_at:args.expected_updated_at}
+   :name==='sas_approve_development'?{p_id:args.development_id,p_expected_updated_at:args.expected_updated_at,p_decision:'approve'}
+   :{p_id:args[key]};
+  const write=await db.rpc(rpc,params);
+  if(write.error)return failTool(id,write.error.message);
+  return response(id,{content:[{type:'text',text:JSON.stringify({operation:name,result:write.data})}]});
  }
  if(name==='sas_review_events'||name==='sas_review_developments'||name==='sas_check_development'){
   if(role!=='admin')return failTool(id,'Admin access required');
