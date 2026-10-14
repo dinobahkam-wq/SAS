@@ -412,3 +412,14 @@ body,button,input,textarea,select{font-family:var(--font-sas-sans),Tahoma,Arial,
 .sas-news-sources span{font-weight:650;color:var(--muted,#66776d)}
 .sas-news-sources a{text-decoration:underline;text-underline-offset:4px}
 @media(max-width:640px){.sas-news-item{padding:20px 0 24px}.sas-news-body{font-size:1rem;line-height:1.9}}
+
+/* Original SAS editorial covers: deliberate illustration, never documentary photography. */
+.sas-editorial-cover{position:relative;display:flex;min-height:280px;margin:24px 0 34px;border-radius:15px;overflow:hidden;background:linear-gradient(125deg,#10392e 0%,#0c312e 50%,#31573b 100%);color:#f6f9f3}
+.sas-cover-art{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.sas-cover-orbit{position:absolute;left:-9%;top:-84%;width:72%;aspect-ratio:1;border:3px solid #b7d39d55;border-radius:50%;box-shadow:0 0 0 34px #b7d39d13,0 0 0 100px #b7d39d0b}
+.sas-cover-grid{position:absolute;inset:0;background-image:linear-gradient(#e0edd60d 1px,transparent 1px),linear-gradient(90deg,#e0edd60d 1px,transparent 1px);background-size:40px 40px;mask-image:linear-gradient(90deg,transparent 10%,black 100%)}
+.sas-cover-symbol{position:absolute;left:6%;bottom:3%;font-size:clamp(7rem,22vw,19rem);font-weight:800;letter-spacing:-.09em;color:#e4f5dd10;direction:ltr}
+.sas-editorial-cover figcaption{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:15px;position:relative;z-index:1;padding:34px clamp(22px,6vw,72px);max-width:78%}
+.sas-editorial-cover figcaption strong{font-size:clamp(1.5rem,3.7vw,2.9rem);line-height:1.65}
+.sas-editorial-cover figcaption small{font-size:.8rem;opacity:.75}
+@media(max-width:640px){.sas-editorial-cover{min-height:245px}.sas-editorial-cover figcaption{max-width:100%;padding:26px}.sas-cover-symbol{left:0;bottom:0}}
