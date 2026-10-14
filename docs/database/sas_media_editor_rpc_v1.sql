@@ -24,7 +24,7 @@ begin
  if not exists (select 1 from storage.objects o where o.bucket_id='sas-media' and o.name=p_storage_path)
  then raise exception 'الملف غير مرفوع إلى المخزن الخاص';end if;
  insert into sas.media_assets(storage_path,original_filename,mime_type,byte_size,alt_ar,caption_ar,source_name,source_url,license_name,license_url,creator_name,media_kind,created_by)
- values(p_storage_path,p_original_filename,p_mime_type,p_byte_size,p_alt_ar,coalesce(p_caption_ar,''),p_source_name,p_source_url,p_license_name,p_license_url,p_creator_name,coalesce(p_media_kind,'archival'))
+ values(p_storage_path,p_original_filename,p_mime_type,p_byte_size,p_alt_ar,coalesce(p_caption_ar,''),p_source_name,p_source_url,p_license_name,p_license_url,p_creator_name,coalesce(p_media_kind,'archival'),auth.uid())
  returning id into v_id;
  return v_id;
 end $$;
